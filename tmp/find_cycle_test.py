@@ -39,6 +39,30 @@ def find_cycle(graph:dict, n_nodes:int):
         return cycles 
     else:
         return []
+
+
+
+
+def find_cycle_on_max_heads(graph:dict):
+    for dep in graph.keys():
+        
+        path = []
+        current = dep
+
+        while current not in path:
+            
+            if current not in graph.keys():
+                break #dead end
+
+            path.append(current)
+            current = graph[current]
+
+        else:
+            cycle = path[path.index(current):]
+            return cycle # returns first cycle found
+
+            
+
     
 
 graph = {'0':['2'],
@@ -50,4 +74,11 @@ graph = {'0':['2'],
 global cycles
 cycles =[]
 
-find_cycle(graph, 5)
+#find_cycle(graph, 5)
+
+max_heads = {'2':'0',
+            '1':'3',
+            '3':'4',
+            '4':'3'}
+
+print(find_cycle_on_max_heads(graph=max_heads))
