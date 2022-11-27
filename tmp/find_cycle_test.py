@@ -42,7 +42,6 @@ def find_cycle(graph:dict, n_nodes:int):
 
 
 
-
 def find_cycle_on_max_heads(graph:dict):
     for dep in graph.keys():
         
@@ -76,9 +75,9 @@ cycles =[]
 
 #find_cycle(graph, 5)
 
-max_heads = {'2':'0',
-            '1':'3',
+max_heads = {'1':'0',
+            '2':'1',
             '3':'4',
-            '4':'3'}
+            '4':'1'}
 
 print(find_cycle_on_max_heads(graph=max_heads))
