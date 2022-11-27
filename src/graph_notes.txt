@@ -1,0 +1,43 @@
+
+GRAPH
+- sentence_ob
+- nodes
+- graph
++ reverse_graph()
++ find_max_heads()
++ find_cycle()
+
+
+
+len(reader.all_sentences)) == 1083 (sentences)
+    list of Sentence objects
+
+Sent 23: len == 5
+    sent.form:
+    ['ROOT', 'Two', '-', 'Way', 'Street']
+
+Sent 54: len == 10
+    sent.form:
+    ['ROOT', 'Two', 'share', 'a', 'house', 'almost', 'devoid', 'of', 'furniture', '.']
+
+print(test_sent1.id)
+print(test_sent1.form)
+print(test_sent1.lemma)
+print(test_sent1.pos)
+print(test_sent1.xpos)
+print(test_sent1.morph)
+print(test_sent1.head)
+print(test_sent1.rel)
+print(test_sent1.empty1)
+print(test_sent1.empty2)
+
+['0', '1', '2', '3', '4']
+['ROOT', 'Two', '-', 'Way', 'Street']
+['ROOT', 'two', '-', 'way', 'street']
+['_', 'CD', 'HYPH', 'NNP', 'NNP']
+['_', '_', '_', '_', '_']
+['_', '_', '_', '_', '_']
+['_', '_', '_', '_', '_']
+['_', '_', '_', '_', '_']
+['_', '_', '_', '_', '_']
+['_', '_', '_', '_', '_']

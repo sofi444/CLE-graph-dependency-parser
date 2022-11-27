@@ -22,7 +22,7 @@ class Graph:
         self.graph = {}
 
         '''
-        GRAPH:dict
+        GRAPH:dict where
         keys are heads
         values are dicts where
             keys are dependents
@@ -48,7 +48,7 @@ class Graph:
         Reverse the graph so that
             graph[head][dep] == rev_graph[dep][head]
         
-        REV_GRAPH is a dict where
+        REV_GRAPH:dict where
         keys are dependents
         values are dicts where
             keys are heads
@@ -118,126 +118,71 @@ class Graph:
 
 
 
-    def reverse_max_heads(self, max_heads:dict):
+    def find_max_heads_simple(self, rev_graph:dict) -> dict:
+
+        '''
+        For each dependent, find candidate head with max score
+
+        MAX_HEADS is a dict where
+        keys are dependents
+        values are the head with max score
+        '''
+
+        max_heads = {}
+
+        for dep, candidate_heads in rev_graph.items():
+            
+            max_head = max(
+                candidate_heads, 
+                key=lambda key: candidate_heads[key]
+                )
+            
+            max_heads[dep] = max_head # no score, look up score from original graph
+            #max_heads[dep] = (max_head, candidate_heads[max_head]) # with score
         
-        '''
-        Reverse MAX_HEADS dict so that
-        
-        REV_MAX_HEADS is a dict where
-        keys are head nodes
-        values are lists of dependents of that head node
-        * [] if node is not the head of any other node
-        '''
-
-        rev_max_heads = collections.defaultdict(list)
-        for dep, max_head in max_heads.items():
-            rev_max_heads[max_head[0]].append(dep)
-        
-        return rev_max_heads
+        return max_heads
 
 
 
-    def has_cycle(self, graph:dict, node:int, visited:list, rec_stack:list):
+    def find_cycle_on_max_heads(self, graph:dict) -> list | None:
+        for dep in graph.keys():
+            
+            path = []
+            current = dep
 
-        '''
-        Recurrent function
-        '''
-        
-        visited[node] = True
-        rec_stack[node] = True
+            while current not in path:
+                
+                if current not in graph.keys():
+                    break #dead end
 
-        for dep in graph[str(node)]:
-            if visited[int(dep)] == False:
-                if self.has_cycle(graph, int(dep), visited, rec_stack) == True:
-                    return True
-            elif rec_stack[int(dep)] == True:
-                return True
-        
-        rec_stack[node] = False
+                path.append(current)
+                current = graph[current]
 
-        return False
-
-
-
-    def find_cycle(self, graph:dict, n_nodes:int) -> list | None:
-
-        '''
-        Check if there is a cycle in the graph
-        '''
-
-        visited = [False] * (n_nodes)
-        rec_stack = [False] * (n_nodes)
-
-        for node in range(n_nodes):
-            if visited[node] == False:
-                if self.has_cycle(graph, node, visited, rec_stack) == True:
-                    return True
-
-        return False
+            else:
+                cycle = path[path.index(current):]
+                return cycle # returns first cycle found else None
 
 
 
 
+if __name__ == "__main__":
 
-reader = Read(blind_file, language, mode)
+    reader = Read(blind_file, language, mode)
 
-test_sent1 = reader.all_sentences[23] #Sentence object
-test_sent2 = reader.all_sentences[54]
+    test_sent1 = reader.all_sentences[23] #Sentence object
+    test_sent2 = reader.all_sentences[54] #longer
 
-graph_ob = Graph(sentence_ob=test_sent1)
+    graph_ob = Graph(sentence_ob=test_sent2)
 
-graph = graph_ob.graph
-rev_graph = graph_ob.reverse_graph()
+    graph = graph_ob.graph
+    rev_graph = graph_ob.reverse_graph()
 
-#pprint.pprint(graph)
-#pprint.pprint(rev_graph)
+    #pprint.pprint(graph)
+    #pprint.pprint(rev_graph)
 
-max_heads = graph_ob.find_max_heads(rev_graph=rev_graph)
-rev_max_heads = graph_ob.reverse_max_heads(max_heads=max_heads)
+    max_heads = graph_ob.find_max_heads_simple(rev_graph=rev_graph)
 
-n_nodes = len(graph_ob.nodes)
+    cycle = graph_ob.find_cycle_on_max_heads(graph=max_heads)
 
-cycle = graph_ob.find_cycle(graph=rev_max_heads, n_nodes=n_nodes)
-
-pprint.pprint(max_heads)
-pprint.pprint(rev_max_heads)
-pprint.pprint(cycle)
-
-
-
-
-
-'''
-len(reader.all_sentences)) == 1083 (sentences)
-    list of Sentence objects
-
-Sent 23: len == 5
-    sent.form:
-    ['ROOT', 'Two', '-', 'Way', 'Street']
-
-Sent 54: len == 10
-    sent.form:
-    ['ROOT', 'Two', 'share', 'a', 'house', 'almost', 'devoid', 'of', 'furniture', '.']
-
-print(test_sent1.id)
-print(test_sent1.form)
-print(test_sent1.lemma)
-print(test_sent1.pos)
-print(test_sent1.xpos)
-print(test_sent1.morph)
-print(test_sent1.head)
-print(test_sent1.rel)
-print(test_sent1.empty1)
-print(test_sent1.empty2)
-
-['0', '1', '2', '3', '4']
-['ROOT', 'Two', '-', 'Way', 'Street']
-['ROOT', 'two', '-', 'way', 'street']
-['_', 'CD', 'HYPH', 'NNP', 'NNP']
-['_', '_', '_', '_', '_']
-['_', '_', '_', '_', '_']
-['_', '_', '_', '_', '_']
-['_', '_', '_', '_', '_']
-['_', '_', '_', '_', '_']
-['_', '_', '_', '_', '_']
-'''
+    #pprint.pprint(max_heads)
+    #pprint.pprint(cycle)
