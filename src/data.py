@@ -98,8 +98,7 @@ class Write:
 
 
         
+if __name__ == "__main__":
 
-
-
-reader = Read(file_name, language, mode)
-Write("sanity_check.conll06", reader.all_sentences)
+    reader = Read(file_name, language, mode)
+    Write("sanity_check.conll06", reader.all_sentences)
