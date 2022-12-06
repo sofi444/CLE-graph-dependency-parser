@@ -11,7 +11,7 @@ blind_file = "wsj_dev.conll06.blind"
 language = "english"
 mode = "dev"
 
-random.seed(1) 
+random.seed(7) 
 
 
 
@@ -42,7 +42,7 @@ class Graph:
         
 
 
-    def reverse_graph(self) -> dict:
+    def reverse_graph(self, graph) -> dict:
 
         '''
         Reverse the graph so that
@@ -54,11 +54,11 @@ class Graph:
             keys are heads
             values are scores
         '''
-        
+
         rev_graph = {}
         
-        for head in self.graph.keys():
-            for dep, score in self.graph[head].items():
+        for head in graph.keys():
+            for dep, score in graph[head].items():
                 if dep not in rev_graph:
                     rev_graph[dep] = {head:score}
                 else:
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     graph_ob = Graph(sentence_ob=test_sent2)
 
     graph = graph_ob.graph
-    rev_graph = graph_ob.reverse_graph()
+    rev_graph = graph_ob.reverse_graph(graph=graph)
 
     #pprint.pprint(graph)
     #pprint.pprint(rev_graph)
