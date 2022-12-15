@@ -44,6 +44,18 @@ def get_cycle_score(graph:dict, cycle:list) -> int:
 
 
 
+def get_return_graph(max_heads:dict, og_graph:dict) -> dict:
+    return_graph = {}
+
+    for dep, max_head in max_heads.items():
+        #score = og_graph[max_head][dep]
+        #return_graph[max_head][dep] = score
+        return_graph[max_head] = dep
+
+    return return_graph
+    
+
+
 def CLE(graph:dict):
     
     '''
@@ -55,9 +67,13 @@ def CLE(graph:dict):
     '''
 
     ## include graph_ob as argument / global graph_ob ??
-    ## re-reverse max_heads before returning? 
     ## dict keys (nodes) as str or int?
     ## direction of arcs within graph + ordered ? (get score)
+    ## Scores for edges entering cycle are massive (?)
+        ## should be okay, scores for in-cycle edges get summed up
+    ## re-reverse max_heads before returning? DONE (get_return_graph)
+    ## Return graph: need scores? (get_return_graph)
+    ## new_graph: remove cycle nodes from dependents of out-cycle nodes - DONE
 
     all_nodes = graph.keys()
 
@@ -71,21 +87,32 @@ def CLE(graph:dict):
     cycle = graph_ob.find_cycle_on_max_heads(graph=max_heads) # list
 
     if cycle is None:
-        return max_heads # i.e., MST
+        #return max_heads # i.e., MST
+        print("returning final graph...")
+        return get_return_graph(max_heads=max_heads, og_graph=graph)
     
     else:
         # Contract cycle and recompute scores
         # Make new graph with conctracted cycle
 
-        #pprint.pprint(graph) # has all possible nodes with scores
-        pprint.pprint(cycle)
-        #pprint.pprint(graph)
-        #pprint.pprint(rev_graph)
+        pprint.pprint(graph) # has all possible nodes with scores
         pprint.pprint(max_heads)
+        pprint.pprint(f"cycle: {cycle}")
+        #pprint.pprint(rev_graph)
+        #pprint.pprint(max_heads)
 
         # Graph excluding in-cycle nodes
-        new_graph = {k:v for k,v in graph.items() if k not in cycle}
-        #pprint.pprint(new_graph)
+        #new_graph = {k:v for k,v in graph.items() if k not in cycle}
+        new_graph = dict()
+
+        for head, dep_dict in graph.items():
+            if head not in cycle:
+                new_graph[head] = {}
+
+                for dep, score in dep_dict.items():
+                    if dep not in cycle:
+                        new_graph[head][dep] = score
+
 
         new_graph['Vc'] = {} # Contracted node
         cycle_score = get_cycle_score(graph, cycle)
@@ -143,23 +170,28 @@ def CLE(graph:dict):
                 # Add only edge [out-cycle node -> in-cycle node with max bp score]
                 new_graph[node]['Vc'] = max_bp_score
 
-                ## Scores are massive (?)
 
 
-        #pprint.pprint(new_graph)
+        pprint.pprint(new_graph)
         #pprint.pprint(tracker_outward)
-        #pprint.pprint(tracker_inward)
-            
-        
-
-        # Arcs entering vc (keys of rev_graph if key in cycle)
-
-
-
+        pprint.pprint(f"tracker_inward: {tracker_inward}")
 
 
         # Call CLE (recursively) on new graph
+
+        y_graph = CLE(new_graph)
+        pprint.pprint(y_graph)
+
+
         # Resolve cycle
+
+        '''Arcs leaving Vc (can be any number, incl. 0)'''
+
+        '''Arc entering Vc (always one)'''
+
+
+        #for cycle_node in cycle:
+            
 
 
 
