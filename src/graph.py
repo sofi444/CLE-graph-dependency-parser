@@ -160,7 +160,10 @@ class Graph:
 
             else:
                 cycle = path[path.index(current):]
-                return cycle # returns first cycle found else None
+
+                # Return first cycle if found else None
+                # Reverse because input graph is reversed
+                return list(reversed(cycle))
 
 
 
@@ -172,7 +175,7 @@ if __name__ == "__main__":
     test_sent1 = reader.all_sentences[23] #Sentence object
     test_sent2 = reader.all_sentences[54] #longer
 
-    graph_ob = Graph(sentence_ob=test_sent2)
+    graph_ob = Graph(sentence_ob=test_sent1)
 
     graph = graph_ob.graph
     rev_graph = graph_ob.reverse_graph(graph=graph)
@@ -184,5 +187,6 @@ if __name__ == "__main__":
 
     cycle = graph_ob.find_cycle_on_max_heads(graph=max_heads)
 
-    #pprint.pprint(max_heads)
-    #pprint.pprint(cycle)
+    pprint.pprint(max_heads)
+    pprint.pprint(cycle)
+    pprint.pprint(type(cycle))
