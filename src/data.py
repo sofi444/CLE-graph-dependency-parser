@@ -7,9 +7,12 @@ n_args = len(sys.argv)
 #file_name = sys.argv[1]
 #language = sys.argv[2]
 #mode = sys.argv[3]
-file_name = "wsj_train.first-1k.conll06"
+
+#file_name = "wsj_train.first-1k.conll06"
+file_name = "wsj_dev.conll06.blind"
 language = "english"
-mode = "train"
+#mode = "train"
+mode = "dev"
 
 
 
@@ -101,4 +104,13 @@ class Write:
 if __name__ == "__main__":
 
     reader = Read(file_name, language, mode)
-    Write("sanity_check.conll06", reader.all_sentences)
+    #Write("sanity_check.conll06", reader.all_sentences)
+
+    ''' 
+    Check sentence length:
+    
+    for sent in reader.all_sentences:
+        #if len(sent.id) == 5:
+        if 7 <= len(sent.id) <= 9:
+            print(reader.all_sentences.index(sent), len(sent.id))
+    '''
