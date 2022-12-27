@@ -1,0 +1,15 @@
+
++ re-reverse max_heads before returning? DONE (get_return_graph)
++ Return graph: needs scores? (get_return_graph) - DONE
++ Scores in max_heads / y_graph / return_graph ? - DONE
++ new_graph: remove cycle nodes from dependents of out-cycle nodes - DONE
++ return_graph excludes nodes that are not max_head of any other token + nodes without dependents
+    add keys anyway with empty dict? - DONE
+
+
+To do / consider:
++ include graph_ob as argument / global graph_ob ??
++ dict keys (nodes) as str or int?
++ add edges not involved in cycle in a function ? (repeated)
++ nicer expression for node_head_of_vc
++ nodes with no dependents as keys with {} required/useful? 
