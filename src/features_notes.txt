@@ -1,0 +1,25 @@
+Create templates
+
+Apply templates to training data (fill in with all possibilities)
+    => Create feature map:
+        one per file (training data)
+        e.g. index 0: hform is 'hello'
+                    1: hpos is NN
+                    ...
+input: train file
+output: dict (feature map)
+
+Create feature vectors of samples in dev/test set
+Give values 0/1 for each feature
+input: sentence from dev/test + feature map
+output: feature vector
+
+
++ distance and direction of ROOT
++ direction: right/left or R/L or else?
++ comma in between elements of feature?
+
+
+to do:
++ add features with words in between head and dep
++ add other features not in paper
