@@ -21,16 +21,19 @@ output: feature vector
 
 
 to do:
-+ add features with words in between head and dep
-+ add other features not in paper
++ add features with words in between head and dep - DONE
++ add other features not in paper - DONE
 + correct distance? if two tokens are next to each other, is the distance 1 or 0? (now 1)
 + between: repeating pos
     no new feature is added because it already exists in feature map
     but how are multiple tokens represented?
 + which feature corresponds to which template?
     now that info is lost
+    UPDATE: DONE (T#:attr1,attr2,...,direction,distance)
++ if token_id is 1, should token-1 be _ROOT_ or <BOS>?
+    ROOT only visually at the beginning of the sentence
 
-Very sparse:
-+ if distance > 20 -> just have feature that says 20+
+Very sparse (Number of features: 686970):
++ if distance > 20 just have feature that says 20+ - DONE (Number of features: 671715)
 + use lemma features?
 + keep lemma and don't use form?

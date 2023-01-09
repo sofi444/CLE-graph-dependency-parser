@@ -1,4 +1,6 @@
 
+import pprint
+
 from data import Sentence, Read, Write
 
 
@@ -31,8 +33,8 @@ class FeatureMap:
 
             for token_idx in range(len(id_list)):
 
-                if token_idx == 2: #debug
-                    break
+                #if token_idx == 5: #debug
+                #    break
 
                 token_id = head_list[token_idx]
                 dep_id = id_list[token_idx]
@@ -91,10 +93,12 @@ class FeatureMap:
                         self.index += 1
 
 
-            break #debug
+            #break #debug
 
             
-        print(self.feature_map)
+        #print("Feature map:")
+        #pprint.pprint(self.feature_map)
+        print("Number of features:", self.index)
 
 
 
@@ -185,7 +189,8 @@ class FeatureMap:
         }
 
 
-        features_one_arc = list(templates.values())
+        #features_one_arc = list(templates.values())
+        features_one_arc = [f"{t}:{f}" for t,f in templates.items()]
 
 
         for token_id in between:
@@ -202,7 +207,8 @@ class FeatureMap:
 
             }
             
-            features_one_arc.extend(list(between_templates.values()))
+            #features_one_arc.extend(list(between_templates.values()))
+            features_one_arc.extend([f"{t}:{f}" for t,f in between_templates.items()])
 
 
         return features_one_arc
@@ -241,7 +247,10 @@ class FeatureMap:
         else:
             print("Something wrong")
         
-        return direction, distance, tokens_in_between
+        if distance > 20:
+            distance = "20+"
+        
+        return direction, str(distance), tokens_in_between
 
 
 
@@ -259,17 +268,23 @@ class FeatureMap:
         dep_idx_P1 = dep_idx +1
         dep_idx_M1 = dep_idx -1
 
-        hP1form = form_list[token_idx_P1]
-        hP1lemma = lemma_list[token_idx_P1]
-        hP1pos = pos_list[token_idx_P1]
+        if token_idx_P1 < len(form_list):
+            hP1form = form_list[token_idx_P1]
+            hP1lemma = lemma_list[token_idx_P1]
+            hP1pos = pos_list[token_idx_P1]
+        else:
+            hP1form = hP1lemma = hP1pos = "_EOS_"
 
         hM1form = form_list[token_idx_M1]
         hM1lemma = lemma_list[token_idx_M1]
         hM1pos = pos_list[token_idx_M1]
 
-        dP1form = form_list[dep_idx_P1]
-        dP1lemma = lemma_list[dep_idx_P1]
-        dP1pos = pos_list[dep_idx_P1]
+        if dep_idx_P1 < len(form_list):
+            dP1form = form_list[dep_idx_P1]
+            dP1lemma = lemma_list[dep_idx_P1]
+            dP1pos = pos_list[dep_idx_P1]
+        else:
+            dP1form = dP1lemma = dP1pos = "_EOS_"
 
         dM1form = form_list[dep_idx_M1]
         dM1lemma = lemma_list[dep_idx_M1]
