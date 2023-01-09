@@ -23,3 +23,14 @@ output: feature vector
 to do:
 + add features with words in between head and dep
 + add other features not in paper
++ correct distance? if two tokens are next to each other, is the distance 1 or 0? (now 1)
++ between: repeating pos
+    no new feature is added because it already exists in feature map
+    but how are multiple tokens represented?
++ which feature corresponds to which template?
+    now that info is lost
+
+Very sparse:
++ if distance > 20 -> just have feature that says 20+
++ use lemma features?
++ keep lemma and don't use form?

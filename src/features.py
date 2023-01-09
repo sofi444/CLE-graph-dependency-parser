@@ -31,17 +31,18 @@ class FeatureMap:
 
             for token_idx in range(len(id_list)):
 
-                if token_idx == 5: #debug
+                if token_idx == 2: #debug
                     break
 
-                head_id = head_list[token_idx]
+                token_id = head_list[token_idx]
                 dep_id = id_list[token_idx]
 
                 if token_idx == 0: # ROOT
                     dform = dlemma = dpos = "_ROOT_"
                     hform = hlemma = hpos = "_NULL_" # Doesn't have a head
                     # Only visually at the beginning of the sentence
-                    direction = distance = "_NULL_" 
+                    direction = distance = "_NULL_"
+                    between = []
 
                     hP1form = hP1lemma = hP1pos = "_NULL_"
                     hM1form = hM1lemma = hM1pos = "_NULL_"
@@ -53,26 +54,32 @@ class FeatureMap:
                     dlemma = lemma_list[token_idx]
                     dpos = pos_list[token_idx]
 
-                    hform, hlemma, hpos = self.get_head_attributes(
-                        head_id, form_list, lemma_list, pos_list
+                    # get attributes of the head
+                    hform, hlemma, hpos = self.get_attributes(
+                        token_id, form_list, lemma_list, pos_list
                     )
 
-                    direction, distance = self.get_direction_and_distance(
-                        head_id, dep_id
+                    # direction of arc, distance between head and dep,
+                    # list of tokens (ids) in between head and dep
+                    direction, distance, between = self.get_direction_distance_between(
+                        token_id, dep_id
                     )
 
                     # get attributes for left/right tokens
                     neighbours_attributes = self.get_neighbours_attributes(
-                        head_id, dep_id, form_list, lemma_list, pos_list
+                        token_id, dep_id, form_list, lemma_list, pos_list
                     )
                 
                     # unpack
                     hP1form, hP1lemma, hP1pos, hM1form, hM1lemma, hM1pos = neighbours_attributes[:6]
                     dP1form, dP1lemma, dP1pos, dM1form, dM1lemma, dM1pos = neighbours_attributes[6:]
-                    
 
+                
                 features_one_arc = self.get_features(
-                    hform, hpos, dform, dpos, direction, distance,
+                    form_list, lemma_list, pos_list,
+                    hform, hlemma, hpos, 
+                    dform, dlemma, dpos, 
+                    direction, distance, between,
                     hP1form, hP1lemma, hP1pos, hM1form, hM1lemma, hM1pos,
                     dP1form, dP1lemma, dP1pos, dM1form, dM1lemma, dM1pos
                 ) #list
@@ -85,27 +92,38 @@ class FeatureMap:
 
 
             break #debug
+
             
         print(self.feature_map)
 
 
 
                 
-    def get_features(self, hform, hpos, dform, dpos, direction, distance,
+    def get_features(self, 
+                    form_list, lemma_list, pos_list,
+                    hform, hlemma, hpos, 
+                    dform, dlemma, dpos, 
+                    direction, distance, between,
                     hP1form, hP1lemma, hP1pos, hM1form, hM1lemma, hM1pos,
-                    P1form, dP1lemma, dP1pos, dM1form, dM1lemma, dM1pos) -> list:
+                    dP1form, dP1lemma, dP1pos, dM1form, dM1lemma, dM1pos) -> list:
 
-        # Unigram templates T1-T6
-        # Bigram templates T7 - T13
-        # Other templates (from McDonald's et al. 2005) T14-T17
+        # Templates from McDonald's et al. (2005):
+            # Unigram T1-T6
+            # Bigram T7-T13
+            # -1/+1 tokens T14-T17
+            # In between tokens T52
+        
+        # Other templates:
+            # T18-T51
+            # In between tokens T53
         
         templates = {
 
             'T1' : f"{hform},{direction},{distance}",
             'T2' : f"{hpos},{direction},{distance}",
-            'T3' : f"{hform},{hpos},{direction},{distance}",
-            'T4' : f"{dform},{direction},{distance}",
-            'T5' : f"{dpos},{direction},{distance}",
+            'T3' : f"{dform},{direction},{distance}",
+            'T4' : f"{dpos},{direction},{distance}",
+            'T5' : f"{hform},{hpos},{direction},{distance}",
             'T6' : f"{dform},{dpos},{direction},{distance}",
 
             'T7' : f"{hform},{dform},{direction},{distance}",
@@ -119,77 +137,135 @@ class FeatureMap:
             'T14' : f"{hpos},{dpos},{hP1pos},{dM1pos},{direction},{distance}",
             'T15' : f"{hpos},{dpos},{hM1pos},{dM1pos},{direction},{distance}",
             'T16' : f"{hpos},{dpos},{hP1pos},{dP1pos},{direction},{distance}",
-            'T17' : f"{hpos},{dpos},{hM1pos},{dP1pos},{direction},{distance}"
-        
+            'T17' : f"{hpos},{dpos},{hM1pos},{dP1pos},{direction},{distance}",
+
+            'T18' : f"{hlemma},{direction},{distance}",
+            'T19' : f"{dlemma},{direction},{distance}",
+
+            'T20' : f"{hform},{dpos},{direction},{distance}",
+            'T21' : f"{hpos},{dform},{direction},{distance}",
+
+            'T22' : f"{hlemma},{dpos},{direction},{distance}",
+            'T23' : f"{hpos},{dlemma},{direction},{distance}",
+            'T24' : f"{hlemma},{hpos},{direction},{distance}",
+            'T25' : f"{dlemma},{dpos},{direction},{distance}",
+            'T26' : f"{hlemma},{dlemma},{direction},{distance}",
+            
+            'T27' : f"{hlemma},{hpos},{dlemma},{dpos},{direction},{distance}",
+            'T28' : f"{hpos},{dlemma},{dpos},{direction},{distance}",
+            'T29' : f"{hlemma},{dlemma},{dpos},{direction},{distance}",
+            'T30' : f"{hlemma},{hpos},{dlemma},{direction},{distance}",
+            'T31' : f"{hlemma},{hpos},{dpos},{direction},{distance}",
+
+            'T32' : f"{hP1form},{direction},{distance}",
+            'T33' : f"{hform},{hP1form},{direction},{distance}",
+            'T34' : f"{hP1pos},{direction},{distance}",
+            'T35' : f"{hpos},{hP1pos},{direction},{distance}",
+
+            'T36' : f"{hM1form},{direction},{distance}",
+            'T37' : f"{hM1form},{hform},{direction},{distance}",
+            'T38' : f"{hM1pos},{direction},{distance}",
+            'T39' : f"{hM1pos},{hpos},{direction},{distance}",
+
+            'T40' : f"{dP1form},{direction},{distance}",
+            'T41' : f"{dform},{dP1form},{direction},{distance}",
+            'T42' : f"{dP1pos},{direction},{distance}",
+            'T43' : f"{dpos},{dP1pos},{direction},{distance}",
+
+            'T44' : f"{dM1form},{direction},{distance}",
+            'T45' : f"{dM1form},{dform},{direction},{distance}",
+            'T46' : f"{dM1pos},{direction},{distance}",
+            'T47' : f"{dM1pos},{dpos},{direction},{distance}",
+
+            'T48' : f"{hM1form},{hform},{hP1form},{direction},{distance}",
+            'T49' : f"{hM1pos},{hpos},{hP1pos},{direction},{distance}",
+            'T50' : f"{dM1form},{dform},{dP1form},{direction},{distance}",
+            'T51' : f"{dM1pos},{dpos},{dP1pos},{direction},{distance}"
+
         }
 
 
         features_one_arc = list(templates.values())
 
+
+        for token_id in between:
+
+            bform, blemma, bpos = self.get_attributes(
+                token_id, form_list, lemma_list, pos_list
+            )
+
+            between_templates = {
+                
+                'T52' : f"{hpos},{bpos},{dpos},{direction},{distance}",
+
+                'T53' : f"{hform},{bform},{dform},{direction},{distance}"
+
+            }
+            
+            features_one_arc.extend(list(between_templates.values()))
+
+
         return features_one_arc
 
 
 
-
-
-
-
-
-    def get_head_attributes(self, head_id:str, 
+    def get_attributes(self, token_id:str, 
         form_list:list, lemma_list:list, pos_list:list) -> tuple:
-        # get attributes of token with id == head_id
+        # get attributes of token with id == token_id
         
-        head_idx = int(head_id)
+        token_idx = int(token_id)
 
-        form = form_list[head_idx]
-        lemma = lemma_list[head_idx]
-        pos = pos_list[head_idx]
+        form = form_list[token_idx]
+        lemma = lemma_list[token_idx]
+        pos = pos_list[token_idx]
 
         return form, lemma, pos
 
     
 
-    def get_direction_and_distance(self, head_id:str, dep_id:str) -> tuple:
+    def get_direction_distance_between(self, token_id:str, dep_id:str) -> tuple:
         
-        head_id = int(head_id)
+        token_id = int(token_id)
         dep_id = int(dep_id)
 
-        if dep_id < head_id:
+        if dep_id < token_id:
             direction = "left"
-            distance = head_id - dep_id
+            distance = token_id - dep_id
+            tokens_in_between = [str(i) for i in range(dep_id+1, token_id)]
 
-        elif dep_id > head_id:
+        elif dep_id > token_id:
             direction = "right"
-            distance = dep_id - head_id
+            distance = dep_id - token_id
+            tokens_in_between = [str(i) for i in range(token_id+1, dep_id)]
         
         else:
             print("Something wrong")
         
-        return direction, distance
+        return direction, distance, tokens_in_between
 
 
 
-    def get_neighbours_attributes(self, head_id:str, dep_id:str,
+    def get_neighbours_attributes(self, token_id:str, dep_id:str,
         form_list:list, lemma_list:list, pos_list:list) -> list:
 
         # get attributes of tokens with ids:
-        # head_id+1, head_id-1, dep_id+1, dep_id-1
+        # token_id+1, token_id-1, dep_id+1, dep_id-1
         
-        head_idx = int(head_id)
+        token_idx = int(token_id)
         dep_idx = int(dep_id)
         
-        head_idx_P1 = head_idx +1
-        head_idx_M1 = head_idx -1
+        token_idx_P1 = token_idx +1
+        token_idx_M1 = token_idx -1
         dep_idx_P1 = dep_idx +1
         dep_idx_M1 = dep_idx -1
 
-        hP1form = form_list[head_idx_P1]
-        hP1lemma = lemma_list[head_idx_P1]
-        hP1pos = pos_list[head_idx_P1]
+        hP1form = form_list[token_idx_P1]
+        hP1lemma = lemma_list[token_idx_P1]
+        hP1pos = pos_list[token_idx_P1]
 
-        hM1form = form_list[head_idx_M1]
-        hM1lemma = lemma_list[head_idx_M1]
-        hM1pos = pos_list[head_idx_M1]
+        hM1form = form_list[token_idx_M1]
+        hM1lemma = lemma_list[token_idx_M1]
+        hM1pos = pos_list[token_idx_M1]
 
         dP1form = form_list[dep_idx_P1]
         dP1lemma = lemma_list[dep_idx_P1]
@@ -212,6 +288,8 @@ class FeatureMap:
 
 
         return neighbours_attributes
+
+
 
 
 
