@@ -38,6 +38,8 @@ TO DO:
     but how are multiple tokens represented?
     ADJ(head) NN NN VBZ(dep)
     T52:ADJ,NN,VBZ
+    - DONE: not an issue
+    
 + if token_id is 1, should token-1 be _ROOT_ or <BOS>?
     ROOT only visually at the beginning of the sentence
 + skip first iteration (token_idx == 0) ?
