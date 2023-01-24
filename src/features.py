@@ -5,37 +5,30 @@ from data import Sentence, Read, Write
 
 
 
-class FeatureMap:
-    
-    def __init__(self, train_data:list) -> None:
-        self.train_data = train_data #all_sentences
-        self.feature_map = {} #{feature:index}
+class Features:
+
+    def __init__(self, data:list) -> None:
         
-        self.index = 0 #index of features in feature_map
+        self.data = data #all_sentences
+        self.feature_map = {} #{feature:index}
 
-        for sentence in self.train_data:
-            #sentence is Sentence object
 
-            '''Sentence attributes'''
-            id_list = sentence.id
-            form_list = sentence.form
-            lemma_list = sentence.lemma
-            pos_list = sentence.pos
-            #xpos_list = sentence.xpos #always empty?
-            #morph_list = sentence.morph #always empty?
-            head_list = sentence.head
-            rel_list = sentence.rel
-            #empty1_list = sentence.empty1 #always empty?
-            #empty2_list = sentence.empty2 #always empty?
 
-            # 1	In	in	IN	_	_	43	ADV	_	_
-            # 2	an	an	DT	_	_	5	NMOD	_	_
+    def create_feature_map(self, train_data):
+        '''
+        Extract features from TRAINING data
+        Create feature map
+        '''
 
+        fm_index = 0 # index of features in feature_map
+
+        for sentence in train_data:
+
+            id_list, form_list, lemma_list, pos_list, head_list = self.get_sentence_attributes(
+                sentence_ob=sentence
+            )
 
             for token_idx in range(len(id_list)):
-
-                if token_idx == 10: #debug
-                    break
 
                 head_id = head_list[token_idx]
                 dep_id = id_list[token_idx]
@@ -63,6 +56,9 @@ class FeatureMap:
                         head_id, form_list, lemma_list, pos_list
                     )
 
+                    if hform == "ROOT":
+                        hform = hlemma = hpos = "_ROOT_" 
+
                     # direction of arc, distance between head and dep,
                     # list of tokens (ids) in between head and dep
                     direction, distance, between = self.get_direction_distance_between(
@@ -89,20 +85,18 @@ class FeatureMap:
                 ) #list
 
 
+                # Add to feature_map
                 for feature in features_one_arc:
                     if feature not in self.feature_map:
-                        self.feature_map[feature] = self.index
-                        self.index += 1
-
+                        self.feature_map[feature] = fm_index
+                        fm_index += 1
 
             break #debug
 
             
         #print("Feature map:")
         #pprint.pprint(self.feature_map)
-        #print("Number of features:", self.index)       
-
-
+        #print("Number of features:", fm_index)
 
 
                 
@@ -128,23 +122,23 @@ class FeatureMap:
 
             'T1' : f"{hform},{direction},{distance}",
             'T2' : f"{hpos},{direction},{distance}",
-            'T3' : f"{dform},{direction},{distance}",
-            'T4' : f"{dpos},{direction},{distance}",
-            'T5' : f"{hform},{hpos},{direction},{distance}",
-            'T6' : f"{dform},{dpos},{direction},{distance}",
+            #'T3' : f"{dform},{direction},{distance}",
+            #'T4' : f"{dpos},{direction},{distance}",
+            #'T5' : f"{hform},{hpos},{direction},{distance}",
+            #'T6' : f"{dform},{dpos},{direction},{distance}",
 
-            'T7' : f"{hform},{dform},{direction},{distance}",
-            'T8' : f"{hpos},{dpos},{direction},{distance}",
-            'T9' : f"{hform},{hpos},{dpos},{direction},{distance}",
-            'T10' : f"{hform},{hpos},{dform},{direction},{distance}",
-            'T11' : f"{hform},{dform},{dpos},{direction},{distance}",
-            'T12' : f"{hpos},{dform},{dpos},{direction},{distance}",
-            'T13' : f"{hform},{hpos},{dform},{dpos},{direction},{distance}",
+            #'T7' : f"{hform},{dform},{direction},{distance}",
+            #'T8' : f"{hpos},{dpos},{direction},{distance}",
+            #'T9' : f"{hform},{hpos},{dpos},{direction},{distance}",
+            #'T10' : f"{hform},{hpos},{dform},{direction},{distance}",
+            #'T11' : f"{hform},{dform},{dpos},{direction},{distance}",
+            #'T12' : f"{hpos},{dform},{dpos},{direction},{distance}",
+            #'T13' : f"{hform},{hpos},{dform},{dpos},{direction},{distance}",
 
-            'T14' : f"{hpos},{dpos},{hP1pos},{dM1pos},{direction},{distance}",
-            'T15' : f"{hpos},{dpos},{hM1pos},{dM1pos},{direction},{distance}",
-            'T16' : f"{hpos},{dpos},{hP1pos},{dP1pos},{direction},{distance}",
-            'T17' : f"{hpos},{dpos},{hM1pos},{dP1pos},{direction},{distance}",
+            #'T14' : f"{hpos},{dpos},{hP1pos},{dM1pos},{direction},{distance}",
+            #'T15' : f"{hpos},{dpos},{hM1pos},{dM1pos},{direction},{distance}",
+            #'T16' : f"{hpos},{dpos},{hP1pos},{dP1pos},{direction},{distance}",
+            #'T17' : f"{hpos},{dpos},{hM1pos},{dP1pos},{direction},{distance}",
 
             #'T18' : f"{hlemma},{direction},{distance}",
             #'T19' : f"{dlemma},{direction},{distance}",
@@ -208,7 +202,7 @@ class FeatureMap:
 
             between_templates = {
                 
-                'T52' : f"{hpos},{bpos},{dpos},{direction},{distance}"
+                #'T52' : f"{hpos},{bpos},{dpos},{direction},{distance}"
 
                 #'T53' : f"{hform},{bform},{dform},{direction},{distance}"
 
@@ -313,6 +307,43 @@ class FeatureMap:
 
 
 
+    def get_sentence_attributes(self, sentence_ob:object) -> tuple:
+        
+        id_list = sentence_ob.id
+        form_list = sentence_ob.form
+        lemma_list = sentence_ob.lemma
+        pos_list = sentence_ob.pos
+        #xpos_list = sentence_ob.xpos #always empty?
+        #morph_list = sentence_ob.morph #always empty?
+        head_list = sentence_ob.head
+        #rel_list = sentence_ob.rel
+        #empty1_list = sentence_ob.empty1 #always empty?
+        #empty2_list = sentence_ob.empty2 #always empty?
+
+        # 1	In	in	IN	_	_	43	ADV	_	_
+        # 2	an	an	DT	_	_	5	NMOD	_	_
+
+        return id_list, form_list, lemma_list, pos_list, head_list
+
+
+
+    def get_fv_one_arc(self, feat_map, features_one_arc):
+        # features_one_arc is the output of get_features
+
+        fv = [0 for i in range(len(feat_map))]
+        fv_dense = []
+
+        for feature in features_one_arc:
+            feat_idx = feat_map[feature]
+            
+            fv_dense.append(feat_idx)
+            fv[feat_idx] = 1
+
+        assert len(fv) == len(feat_map)
+
+        return fv, fv_dense
+
+
 
 
 
@@ -330,4 +361,5 @@ if __name__ == "__main__":
     #print(type(all_sentences)) # <class 'list'> 
     #print(type(all_sentences[0])) # <class 'data.Sentence'>
 
-    FeatureMap(all_sentences)
+    feat = Features(data=all_sentences)
+    feat.create_feature_map(train_data=all_sentences)
