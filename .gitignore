@@ -1,4 +1,8 @@
 notes*
+*/*_notes.txt
+models/
+explore/
+tmp/
 .ipynb_checkpoints/
 data/
 bin/
