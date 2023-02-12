@@ -1,19 +1,15 @@
+
 import sys
 
 from data import Read
 
 
 
-n_args = len(sys.argv)
+#n_args = len(sys.argv)
 #pred_file = sys.argv[1]
 #gold_file = sys.argv[2]
 #language = sys.argv[3]
 #mode = sys.argv[4]
-
-pred_file = "wsj_dev.conll06.pred"
-gold_file = "wsj_dev.conll06.gold"
-language = "english"
-mode = "dev"
 
 
 
@@ -63,8 +59,14 @@ class Evaluate:
 
 
 
+if __name__ == "__main__":
+
+    pred_file = "wsj_dev.conll06.pred"
+    gold_file = "wsj_dev.conll06.gold"
+    language = "english"
+    mode = "dev"
 
 
-eval = Evaluate(pred_file, gold_file, language, mode)
-print("UAS:", eval.UAS())
-print("LAS:", eval.LAS())
+    evaluation = Evaluate(pred_file, gold_file, language, mode)
+    print("UAS:", evaluation.UAS())
+    print("LAS:", evaluation.LAS())

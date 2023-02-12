@@ -7,9 +7,8 @@ from data import Sentence, Read, Write
 
 class Features:
 
-    def __init__(self, data:list) -> None:
-        
-        self.data = data #all_sentences
+    def __init__(self) -> None:
+
         self.feature_map = {} #{feature:index}
 
 
@@ -91,12 +90,14 @@ class Features:
                         self.feature_map[feature] = fm_index
                         fm_index += 1
 
-            break #debug
+            #break #debug
 
             
         #print("Feature map:")
         #pprint.pprint(self.feature_map)
         #print("Number of features:", fm_index)
+
+        return self.feature_map
 
 
                 
@@ -122,23 +123,23 @@ class Features:
 
             'T1' : f"{hform},{direction},{distance}",
             'T2' : f"{hpos},{direction},{distance}",
-            #'T3' : f"{dform},{direction},{distance}",
-            #'T4' : f"{dpos},{direction},{distance}",
-            #'T5' : f"{hform},{hpos},{direction},{distance}",
-            #'T6' : f"{dform},{dpos},{direction},{distance}",
+            'T3' : f"{dform},{direction},{distance}",
+            'T4' : f"{dpos},{direction},{distance}",
+            'T5' : f"{hform},{hpos},{direction},{distance}",
+            'T6' : f"{dform},{dpos},{direction},{distance}",
 
-            #'T7' : f"{hform},{dform},{direction},{distance}",
-            #'T8' : f"{hpos},{dpos},{direction},{distance}",
-            #'T9' : f"{hform},{hpos},{dpos},{direction},{distance}",
-            #'T10' : f"{hform},{hpos},{dform},{direction},{distance}",
-            #'T11' : f"{hform},{dform},{dpos},{direction},{distance}",
-            #'T12' : f"{hpos},{dform},{dpos},{direction},{distance}",
-            #'T13' : f"{hform},{hpos},{dform},{dpos},{direction},{distance}",
+            'T7' : f"{hform},{dform},{direction},{distance}",
+            'T8' : f"{hpos},{dpos},{direction},{distance}",
+            'T9' : f"{hform},{hpos},{dpos},{direction},{distance}",
+            'T10' : f"{hform},{hpos},{dform},{direction},{distance}",
+            'T11' : f"{hform},{dform},{dpos},{direction},{distance}",
+            'T12' : f"{hpos},{dform},{dpos},{direction},{distance}",
+            'T13' : f"{hform},{hpos},{dform},{dpos},{direction},{distance}",
 
-            #'T14' : f"{hpos},{dpos},{hP1pos},{dM1pos},{direction},{distance}",
-            #'T15' : f"{hpos},{dpos},{hM1pos},{dM1pos},{direction},{distance}",
-            #'T16' : f"{hpos},{dpos},{hP1pos},{dP1pos},{direction},{distance}",
-            #'T17' : f"{hpos},{dpos},{hM1pos},{dP1pos},{direction},{distance}",
+            'T14' : f"{hpos},{dpos},{hP1pos},{dM1pos},{direction},{distance}",
+            'T15' : f"{hpos},{dpos},{hM1pos},{dM1pos},{direction},{distance}",
+            'T16' : f"{hpos},{dpos},{hP1pos},{dP1pos},{direction},{distance}",
+            'T17' : f"{hpos},{dpos},{hM1pos},{dP1pos},{direction},{distance}",
 
             #'T18' : f"{hlemma},{direction},{distance}",
             #'T19' : f"{dlemma},{direction},{distance}",
@@ -202,7 +203,7 @@ class Features:
 
             between_templates = {
                 
-                #'T52' : f"{hpos},{bpos},{dpos},{direction},{distance}"
+                'T52' : f"{hpos},{bpos},{dpos},{direction},{distance}"
 
                 #'T53' : f"{hform},{bform},{dform},{direction},{distance}"
 
@@ -327,17 +328,18 @@ class Features:
 
 
 
-    def get_fv_one_arc(self, feat_map, features_one_arc):
+    def features_to_vector(self, feat_map, features_one_arc):
         # features_one_arc is the output of get_features
 
         fv = [0 for i in range(len(feat_map))]
         fv_dense = []
 
         for feature in features_one_arc:
-            feat_idx = feat_map[feature]
-            
-            fv_dense.append(feat_idx)
-            fv[feat_idx] = 1
+            if feature in feat_map:
+                feat_idx = feat_map[feature]
+                
+                fv_dense.append(feat_idx)
+                fv[feat_idx] = 1
 
         assert len(fv) == len(feat_map)
 
@@ -347,19 +349,22 @@ class Features:
 
 
 
-
 if __name__ == "__main__":
+    
+    test_reader = Read(file_name="wsj_dev.conll06.blind",
+                        language="english",
+                        mode="dev")
+    
+    train_reader = Read(file_name="wsj_train.first-1k.conll06",
+                        language="english",
+                        mode="train") 
 
-    file_name = "wsj_train.first-1k.conll06"
-    language = "english"
-    mode = "train"
+    test_sent1 = test_reader.all_sentences[23] #Sentence object
+    test_sent2 = test_reader.all_sentences[54] #longer
 
-    reader = Read(file_name, language, mode)
+    train_data = train_reader.all_sentences[:10]
 
-    all_sentences = reader.all_sentences
+    feat = Features()
+    feat_map = feat.create_feature_map(train_data=train_data)
 
-    #print(type(all_sentences)) # <class 'list'> 
-    #print(type(all_sentences[0])) # <class 'data.Sentence'>
-
-    feat = Features(data=all_sentences)
-    feat.create_feature_map(train_data=all_sentences)
+    pprint.pprint(feat_map)
