@@ -3,6 +3,7 @@ notes*
 models/
 explore/
 tmp/
+logs/
 .ipynb_checkpoints/
 data/
 bin/
@@ -12,6 +13,7 @@ include/
 pyvenv.cfg
 share/
 src/__pycache__
+.gitignore
 
 
 # Logs
