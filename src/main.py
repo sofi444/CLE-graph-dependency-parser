@@ -48,14 +48,6 @@ def main(args):
 
         print(f"\nSize of feature map & w: {len(feature_map)}")
 
-        # init eval dict
-        eval_dict = {epoch_num: 
-                        {sent_num: 0.0 # sentence-level UAS
-                        for sent_num in range(1, len(train_data)+1)
-                        } 
-                    for epoch_num in range(1, args.n_epochs+1)
-                    }
-
 
         for epoch in range(1, args.n_epochs+1):
 
@@ -64,6 +56,7 @@ def main(args):
             print(f"\n+++ Epoch {epoch} +++")
 
             sent_num = 0
+            all_uas = []
 
             for sentence in train_data:
 
@@ -92,17 +85,12 @@ def main(args):
                 # training iteration
                 weight_vector, uas_sent, correct_arcs, total_arcs = model.train()
                 
-                # populate eval dict
-                eval_dict[epoch][sent_num] = uas_sent
+                all_uas.append(uas_sent)
                 
                 # print every n sentences
                 if sent_num % args.print_every == 0:
-
-                    _sents_so_far = sent_num
                     
-                    uas_so_far = sum(
-                        list(eval_dict[epoch].values())
-                    ) / _sents_so_far
+                    uas_so_far = sum(all_uas)/len(all_uas)
                     
                     # UAS general is avg of sentence UASs
                     print(f"Sent. {sent_num}, UAS sent: {uas_sent}, UAS general: {uas_so_far}")
@@ -118,7 +106,7 @@ def main(args):
                         models_dir=args.models_dir)
 
         training_time = time.strftime("%H:%M:%S", time.gmtime(time.time()-_start_tr))
-        print(f"Total training time: {training_time}")
+        print(f"\nTotal training time: {training_time}")
 
     
 
