@@ -3,6 +3,8 @@ import pprint
 import collections
 import random
 
+import networkx as nx
+
 from data import Read
 from graph_v2 import Graph
 from features import Features
@@ -14,12 +16,32 @@ class Decoder:
         pass
 
 
+
+    def nx_CLE(self, graph:dict) -> dict:
+
+        nx_graph = nx.DiGraph(graph)
+
+        cle = nx.algorithms.tree.branchings.Edmonds(nx_graph)
+
+        nx_mst = cle.find_optimum(
+            attr='score', 
+            kind='max', 
+            style="aborescence", 
+            preserve_attrs=True
+        )
+
+        mst_dict = nx.to_dict_of_dicts(nx_mst)
+
+        return mst_dict
+
+
+
     def CLE(self, graph:dict) -> dict:
 
         # Debug
         #global recursion_it
-        #print("\nRecursion iteration number: ", recursion_it)
         #recursion_it += 1
+        #print("\nRecursion iteration number: ", recursion_it)
         
         '''
         GRAPH:dict where
@@ -35,7 +57,10 @@ class Decoder:
 
         # Debug
         #print("All nodes of graph: ", all_nodes)
-        #pprint.pprint(graph)
+        #if recursion_it == 1:
+        #    print("\nGraph: (line 38)")
+        #    pprint.pprint(graph, compact=True, width=120)
+        #    print(graph)
 
         # Reverse graph
         rev_graph = Graph.reverse_graph(self, graph=graph)
@@ -49,7 +74,7 @@ class Decoder:
         if cycle is None:
 
             # Debug
-            #print("No cycle found, calling return_graph()...")
+            print("No cycle found, calling return_graph()...")
 
             return_graph = self.get_return_graph(max_heads=max_heads, 
                                             lookup_graph=graph, 
@@ -63,12 +88,12 @@ class Decoder:
 
             # Debug
             #print("\ngraph")
-            #pprint.pprint(graph) # has all possible nodes with scores
-            #print("\nmax_heads")
+            #pprint.pprint(graph) # has all possible nodes with scoresQ
+            #print("\nmax_heads:")
             #pprint.pprint(max_heads)
             #pprint.pprint(f"Cycle found: {cycle}")
-            #pprint.pprint(rev_graph)
-            #pprint.pprint(max_heads)
+            #print("\nreversed_graph:")
+            #pprint.pprint(rev_graph, compact=True, width=120)
 
             # Graph excluding in-cycle nodes
             new_graph = dict()
@@ -81,8 +106,10 @@ class Decoder:
                     # Add edges that are not involved in the cycle
                     for dep, arc_attributes in dep_dict.items():
                         if dep not in cycle:
-                            score = arc_attributes['score']
-                            new_graph[head][dep] = {'fv': [], 'score': score}
+                            new_graph[head][dep] = {
+                                'fv': arc_attributes['fv'], 
+                                'score': arc_attributes['score']
+                            }
 
 
             # Add contracted node Vc
@@ -180,9 +207,11 @@ class Decoder:
                     # Add edges that are not involved in the cycle
                     for dep, arc_attributes in dep_dict.items():
                         if dep not in cycle and dep != vc:
-                            fv = arc_attributes['fv']
-                            score = arc_attributes['score']
-                            resolved_graph[head][dep] = {'fv': fv, 'score': score}
+
+                            resolved_graph[head][dep] = {
+                                'fv': arc_attributes['fv'], 
+                                'score': arc_attributes['score']
+                            }
 
             # Debug
             #print("\nDEBUG - added noded/edges not involved in the cycle")
@@ -208,7 +237,10 @@ class Decoder:
             # Add edge [out-cycle node head of vc -> in-cycle node with max bp score]
             resolved_graph[node_head_of_vc][node_dep_incycle] = {'fv': fv_enter_cycle,
                                                                 'score': score_enter_cycle}
-            
+            #tmp
+            #print("Resolved graph: (line 217)")
+            #pprint.pprint(resolved_graph, compact=True, width=120)
+
             # Add in cycle edges [prev cycle node -> cycle node]
             # Except if cycle node already has a head
             # (dependent of head of Vc)
@@ -219,12 +251,15 @@ class Decoder:
                     score_incycle_edge = graph[prev_cycle_node][cycle_node]['score']
                     fv_incycle_edge = graph[prev_cycle_node][cycle_node]['fv']
 
+                    #print(prev_cycle_node, cycle_node) # tmp
+
                     # prev_cycle_node cannot be in resolved_graph already -> add
-                    resolved_graph[prev_cycle_node] = {cycle_node:score_incycle_edge}
-                    resolved_graph[prev_cycle_node] = {}
                     resolved_graph[prev_cycle_node][cycle_node] = {'fv': fv_incycle_edge,
                                                                 'score': score_incycle_edge}
 
+            #tmp
+            #print("Resolved graph: (line 239)")
+            #pprint.pprint(resolved_graph, compact=True, width=120)
 
             # Debug
             #print("\nDEBUG - added edges entering Vc")
@@ -372,23 +407,24 @@ if __name__ == "__main__":
     test_sent1 = test_reader.all_sentences[23] #Sentence object
     test_sent2 = test_reader.all_sentences[54] #longer
 
-    train_data = train_reader.all_sentences[:2]
+    train_data = train_reader.all_sentences[:20]
 
 
-    test_sent1 = test_reader.all_sentences[23] # Sentence object (len 5) - works well
-    test_sent2 = test_reader.all_sentences[266] # len 7, no cycle
+    test_sent1 = test_reader.all_sentences[23] # Sentence object (len 5)
+    test_sent2 = test_reader.all_sentences[266] # len 7
     test_sent3 = test_reader.all_sentences[301] # len 8
     test_sent4 = test_reader.all_sentences[70] # len 9
     test_sent5 = test_reader.all_sentences[54] # len 10
+    test_sent6 = test_reader.all_sentences[100]
 
     feat = Features()
     feature_map = feat.create_feature_map(train_data=train_data)
 
     random.seed(7)
-    tmp_w = [random.uniform(0,20) for _ in len(feature_map)]
+    tmp_w = [random.uniform(0,20) for _ in range(len(feature_map))]
 
     # make graph obj outside of CLE call
-    graph_ob = Graph(sentence=test_sent5,
+    graph_ob = Graph(sentence=test_sent6,
                     feature_map=feature_map,
                     weight_vector=tmp_w,
                     graph_type="fully_connected")
@@ -396,14 +432,26 @@ if __name__ == "__main__":
     graph = graph_ob.graph
 
     # Debug
-    #recursion_it = 1
-
-    #final_graph = CLE(graph=graph)
+    #recursion_it = 0
 
     dec = Decoder()
-    final_graph = dec.CLE(graph=graph)
 
-    print("\nfinal_graph")
-    pprint.pprint(final_graph)
+    ''' My CLE '''
 
-    print(dec.is_spanning_tree(test_graph=final_graph, og_graph=graph))
+    #final_graph = dec.CLE(graph=graph)
+
+    #print("\nfinal_graph")
+    #pprint.pprint(final_graph, compact=True, width=120)
+
+    #print(dec.is_spanning_tree(test_graph=final_graph, og_graph=graph))
+
+
+    ''' NetworkX CLE '''
+
+    final_graph_nx = dec.nx_CLE(graph=graph)
+
+    print("\nfinal_graph_nx")
+    pprint.pprint(final_graph_nx, compact=True, width=120)
+
+    print(dec.is_spanning_tree(test_graph=final_graph_nx, og_graph=graph))
+    

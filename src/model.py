@@ -38,7 +38,8 @@ class StructuredPerceptron:
     def train(self):
         
         # predict
-        pred_graph = D.CLE(graph=self.fc_graph)
+        #pred_graph = D.CLE(graph=self.fc_graph)
+        pred_graph = D.nx_CLE(graph=self.fc_graph)
 
         #if not D.is_spanning_tree(test_graph=pred_graph, og_graph=self.fc_graph):
         #    print('NOT a spanning tree')
@@ -48,6 +49,10 @@ class StructuredPerceptron:
             pred_graph=pred_graph, gold_graph=self.gold_graph
         )
 
+        #tmp
+        #pprint.pprint(pred_graph, sort_dicts=True, compact=True)
+        #pprint.pprint(self.gold_graph, sort_dicts=True, compact=True)
+        #print(f"+++ UAS: {uas_sent} +++")
 
         if uas_sent == 1.0: # all arcs are correct -> return
             #print(f"uas_sent: 100%") # complete match
@@ -84,7 +89,8 @@ class StructuredPerceptron:
     def test(self):
 
         # predict
-        pred_graph = D.CLE(graph=self.fc_graph)
+        #pred_graph = D.CLE(graph=self.fc_graph)
+        pred_graph = D.nx_CLE(graph=self.fc_graph)
 
         #if not D.is_spanning_tree(test_graph=pred_graph, og_graph=self.fc_graph):
         #    print('NOT a spanning tree')
@@ -154,13 +160,16 @@ if __name__ == "__main__":
     test_sent1 = test_reader.all_sentences[23] #Sentence object
     test_sent2 = test_reader.all_sentences[54] #longer
 
-    train_data = train_reader.all_sentences[:2]
+    train_data = train_reader.all_sentences[:5]
 
     features_ob = Features()
     feature_map = features_ob.create_feature_map(train_data)
 
     random.seed(7)
-    tmp_w = [random.uniform(0,20) for _ in len(feature_map)]
+    tmp_w = [random.uniform(0,20) for _ in range(len(feature_map))]
+
+    assert len(feature_map) == len(tmp_w)
+    print(f"Size of feature map & w: {len(tmp_w)}")
 
     gold_ob = Graph(sentence=train_data[1],
                     feature_map=feature_map,
