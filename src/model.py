@@ -38,8 +38,8 @@ class StructuredPerceptron:
     def train(self):
         
         # predict
-        #pred_graph = D.CLE(graph=self.fc_graph)
-        pred_graph = D.nx_CLE(graph=self.fc_graph)
+        pred_graph = D.CLE(graph=self.fc_graph)
+        #pred_graph = D.nx_CLE(graph=self.fc_graph)
 
         #if not D.is_spanning_tree(test_graph=pred_graph, og_graph=self.fc_graph):
         #    print('NOT a spanning tree')
@@ -89,8 +89,8 @@ class StructuredPerceptron:
     def test(self):
 
         # predict
-        #pred_graph = D.CLE(graph=self.fc_graph)
-        pred_graph = D.nx_CLE(graph=self.fc_graph)
+        pred_graph = D.CLE(graph=self.fc_graph)
+        #pred_graph = D.nx_CLE(graph=self.fc_graph)
 
         #if not D.is_spanning_tree(test_graph=pred_graph, og_graph=self.fc_graph):
         #    print('NOT a spanning tree')

@@ -26,7 +26,7 @@ class Decoder:
         nx_mst = cle.find_optimum(
             attr='score', 
             kind='max', 
-            style="aborescence", 
+            style='aborescence', 
             preserve_attrs=True
         )
 
@@ -62,6 +62,9 @@ class Decoder:
         #    pprint.pprint(graph, compact=True, width=120)
         #    print(graph)
 
+        #print("\nGraph: (line 38)")
+        #pprint.pprint(graph, compact=True, width=120)
+
         # Reverse graph
         rev_graph = Graph.reverse_graph(self, graph=graph)
 
@@ -74,7 +77,7 @@ class Decoder:
         if cycle is None:
 
             # Debug
-            print("No cycle found, calling return_graph()...")
+            #print("No cycle found, calling return_graph()...")
 
             return_graph = self.get_return_graph(max_heads=max_heads, 
                                             lookup_graph=graph, 
@@ -88,7 +91,7 @@ class Decoder:
 
             # Debug
             #print("\ngraph")
-            #pprint.pprint(graph) # has all possible nodes with scoresQ
+            #pprint.pprint(graph, compact=True, width=120) # has all possible nodes with scores
             #print("\nmax_heads:")
             #pprint.pprint(max_heads)
             #pprint.pprint(f"Cycle found: {cycle}")
@@ -149,7 +152,7 @@ class Decoder:
                     '''Arcs entering Vc'''
 
                     # bp: breaking point
-                    max_bp_score = float()
+                    max_bp_score = -100.00
 
                     # Iterate through in-cycle nodes
                     for cycle_node in cycle:
@@ -432,26 +435,25 @@ if __name__ == "__main__":
     graph = graph_ob.graph
 
     # Debug
-    #recursion_it = 0
+    recursion_it = 0
 
     dec = Decoder()
 
     ''' My CLE '''
 
-    #final_graph = dec.CLE(graph=graph)
+    final_graph = dec.CLE(graph=graph)
 
-    #print("\nfinal_graph")
-    #pprint.pprint(final_graph, compact=True, width=120)
+    print("\nfinal_graph")
+    pprint.pprint(final_graph, compact=True, width=120)
 
-    #print(dec.is_spanning_tree(test_graph=final_graph, og_graph=graph))
+    print(dec.is_spanning_tree(test_graph=final_graph, og_graph=graph))
 
 
     ''' NetworkX CLE '''
 
-    final_graph_nx = dec.nx_CLE(graph=graph)
+    #final_graph_nx = dec.nx_CLE(graph=graph)
 
-    print("\nfinal_graph_nx")
-    pprint.pprint(final_graph_nx, compact=True, width=120)
+    #print("\nfinal_graph_nx")
+    #pprint.pprint(final_graph_nx, compact=True, width=120)
 
-    print(dec.is_spanning_tree(test_graph=final_graph_nx, og_graph=graph))
-    
+    #print(dec.is_spanning_tree(test_graph=final_graph_nx, og_graph=graph))

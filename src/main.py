@@ -61,6 +61,7 @@ def main(args):
             for sentence in train_data:
 
                 sent_num += 1 # First instance is sentence 1
+                #print(sent_num) #tmp
 
                 # init graphs
                 gold_graph = Graph(sentence=sentence,
