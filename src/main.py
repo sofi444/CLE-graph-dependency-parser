@@ -93,17 +93,18 @@ def main(args):
                     uas_so_far = sum(all_uas)/len(all_uas)
                     
                     # UAS general is avg of sentence UASs
-                    print(f"Sent. {sent_num}, UAS sent: {uas_sent}, UAS general: {uas_so_far}")
+                    print(f"Sent. {sent_num}, UAS sent: {round(uas_sent, 3)}, UAS general: {round(uas_so_far, 3)}")
 
 
             epoch_time = time.strftime("%H:%M:%S", time.gmtime(time.time()-_start_ep))
             print(f"Epoch {epoch} time: {epoch_time}")
 
 
-        # save model + feature map
-        save_model_fm(model=weight_vector, 
-                        fm=feature_map, 
-                        models_dir=args.models_dir)
+        if args.save_model:
+            # save model + feature map
+            save_model_fm(model=weight_vector, 
+                            fm=feature_map, 
+                            models_dir=args.models_dir)
 
         training_time = time.strftime("%H:%M:%S", time.gmtime(time.time()-_start_tr))
         print(f"\nTotal training time: {training_time}")
@@ -153,7 +154,7 @@ def main(args):
         
         
         uas_general = uas_total / num_sentences
-        print(f"Done. UAS: {uas_general}")
+        print(f"Done. UAS: {round(uas_general, 3)}")
         
         # write preds to file
 
@@ -238,6 +239,12 @@ if __name__ == "__main__":
         type=int,
         default=7,
         help="seed for random init of weight vector",
+    )
+
+    parser.add_argument(
+        "--save_model",
+        action='store_true',
+        help="include --save_model to save the model, omit otherwise",
     )
 
     parser.add_argument(
