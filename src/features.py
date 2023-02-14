@@ -331,7 +331,7 @@ class Features:
     def features_to_vector(self, feat_map, features_one_arc):
         # features_one_arc is the output of get_features
 
-        fv = [0 for i in range(len(feat_map))]
+        #fv = [0 for i in range(len(feat_map))]
         fv_dense = []
 
         for feature in features_one_arc:
@@ -339,11 +339,12 @@ class Features:
                 feat_idx = feat_map[feature]
                 
                 fv_dense.append(feat_idx)
-                fv[feat_idx] = 1
+                #fv[feat_idx] = 1
 
-        assert len(fv) == len(feat_map)
+        #assert len(fv) == len(feat_map)
 
-        return fv, fv_dense
+        #return fv
+        return fv_dense
 
 
 

@@ -184,18 +184,6 @@ class Graph:
 
 
     def get_fv(self, feature_map:dict, sent_attributes:list, head_id:str, dep_id:str):
-        
-        # go from sent obj to fv (for one arc)
-        # need: sent attr, head_id, dep_id, featmap
-        # set attr:
-            # if root ...
-            # else:
-                # set dep attr from lists
-                # get head att ()
-                # get dir dist betw
-                # get attr for neighbours
-        # get features(pass all attr)
-        # features to vector (choose sparse vs dense)
 
         id_list = sent_attributes[0]
         form_list = sent_attributes[1]
@@ -241,7 +229,7 @@ class Graph:
         ) #list
 
 
-        fv, fv_dense = F.features_to_vector(
+        fv_dense = F.features_to_vector(
             feature_map,
             features_one_arc
         )
