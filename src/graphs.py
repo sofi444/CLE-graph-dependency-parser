@@ -1,5 +1,4 @@
-import sys
-import collections
+
 import pprint
 import random
 import numpy as np
@@ -10,10 +9,10 @@ from features import Features
 
 
 class Graph:
-    def __init__(self, sentence:object, 
-                    feature_map:dict, 
-                    weight_vector:list, 
-                    graph_type:str) -> None:
+    def __init__(self, sentence:object=None, 
+                    feature_map:dict=None, 
+                    weight_vector:list=None, 
+                    graph_type:str=None) -> None:
         
         global F
         F = Features() # for accessing functions
@@ -29,16 +28,15 @@ class Graph:
 
         # shared across arcs
         self.sent_attributes = F.get_sentence_attributes(self.sentence)
-
         
         '''
         GRAPH:dict where
-        keys are heads
-        values are dicts where
-            keys are dependents
+            keys are heads
             values are dicts where
-                keys are fv, score
-                values are list(fv), float(score)
+                keys are dependents
+                values are dicts where
+                    keys are fv, score
+                    values are list(fv), float(score)
         '''
         
 
@@ -46,7 +44,7 @@ class Graph:
 
             for node in self.nodes:
 
-                dependents = {} #{dep_node: {fv: [], score: float()}}
+                dependents = {} # {dep_node: {fv: [], score: float()}}
 
                 for dep_node in self.nodes:
                     if not (dep_node == '0' or dep_node == node): # impossible edges
@@ -96,9 +94,7 @@ class Graph:
                     else:
                         self.graph[head][dep] = arc_attributes
 
-                
 
-        
 
     def reverse_graph(self, graph) -> dict:
 
@@ -107,12 +103,12 @@ class Graph:
             graph[head][dep] == rev_graph[dep][head]
         
         REV_GRAPH:dict where
-        keys are dependents
-        values are dicts where
-            keys are heads
+            keys are dependents
             values are dicts where
-                keys are fv, score
-                values are list(fv), float(score)
+                keys are heads
+                values are dicts where
+                    keys are fv, score
+                    values are list(fv), float(score)
         '''
 
         rev_graph = {}
@@ -128,14 +124,14 @@ class Graph:
 
 
 
-    def find_max_heads_simple(self, rev_graph:dict) -> dict:
+    def find_max_heads(self, rev_graph:dict) -> dict:
 
         '''
         For each dependent, find candidate head with max score
 
-        MAX_HEADS is a dict where
-        keys are dependents
-        values are the head with max score
+        MAX_HEADS:dict where
+            keys are dependents
+            values are the head with max score
         '''
 
         max_heads = {}
@@ -153,14 +149,19 @@ class Graph:
                 key=lambda key: tmp_dict[key]
                 )
             
-            max_heads[dep] = max_head # no score, look up score from original graph
-            #max_heads[dep] = (max_head, candidate_heads[max_head]) # with score
+            max_heads[dep] = max_head # no score, look up score later from original graph
         
         return max_heads
 
 
 
-    def find_cycle_on_max_heads(self, graph:dict) -> list | None:
+    def find_cycle(self, graph:dict) -> list | None:
+
+        '''
+        Looks for a cycle in max_heads
+        Returns first cycle if found (list) else None
+        '''
+        
         for dep in graph.keys():
             
             path = []
@@ -177,13 +178,17 @@ class Graph:
             else:
                 cycle = path[path.index(current):]
 
-                # Return first cycle if found else None
+
                 # Reverse because input graph is reversed
                 return list(reversed(cycle))
 
 
 
-    def get_fv(self, feature_map:dict, sent_attributes:list, head_id:str, dep_id:str):
+    def get_fv(self, feature_map:dict, sent_attributes:list, head_id:str, dep_id:str) -> list:
+
+        '''
+        Returns a dense feature vector for one arc
+        '''
 
         id_list = sent_attributes[0]
         form_list = sent_attributes[1]
@@ -239,20 +244,18 @@ class Graph:
 
 
 
-    def get_score(self, weight_vector:list, fv:list, fv_type="dense") -> float:
+    def get_score(self, weight_vector:list, fv:list) -> float:
 
-        # calculate score for one arc
+        '''
+        Returns score for one arc based on its features
+        '''
+
         arc_score = float()
 
-        if fv_type == "dense":
-            for feature in fv:
-                feat_idx = int(feature)
-                arc_score += weight_vector[feat_idx]
-        
-        elif fv_type == "sparse":
-            assert len(weight_vector) == len(fv)
+        for feature in fv:
+            feat_idx = int(feature)
+            arc_score += weight_vector[feat_idx]
 
-            arc_score += np.dot(fv, weight_vector)
 
         return arc_score
 
@@ -306,9 +309,9 @@ if __name__ == "__main__":
     pprint.pprint(fully_connected_graph)
     #pprint.pprint(rev_graph)
 
-    max_heads = fully_connected_ob.find_max_heads_simple(rev_graph=rev_graph)
+    max_heads = fully_connected_ob.find_max_heads(rev_graph=rev_graph)
 
-    cycle = fully_connected_ob.find_cycle_on_max_heads(graph=max_heads)
+    cycle = fully_connected_ob.find_cycle(graph=max_heads)
 
     #pprint.pprint(max_heads)
     #pprint.pprint(cycle) #list

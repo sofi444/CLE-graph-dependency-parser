@@ -1,7 +1,7 @@
 
 import pprint
 
-from data import Sentence, Read, Write
+from data import Read
 
 
 
@@ -9,11 +9,12 @@ class Features:
 
     def __init__(self) -> None:
 
-        self.feature_map = {} #{feature:index}
+        self.feature_map = {} # {feature:index}
 
 
 
     def create_feature_map(self, train_data):
+
         '''
         Extract features from TRAINING data
         Create feature map
@@ -90,12 +91,6 @@ class Features:
                         self.feature_map[feature] = fm_index
                         fm_index += 1
 
-            #break #debug
-
-            
-        #print("Feature map:")
-        #pprint.pprint(self.feature_map)
-        #print("Number of features:", fm_index)
 
         return self.feature_map
 
@@ -109,15 +104,19 @@ class Features:
                     hP1form, hP1lemma, hP1pos, hM1form, hM1lemma, hM1pos,
                     dP1form, dP1lemma, dP1pos, dM1form, dM1lemma, dM1pos) -> list:
 
-        # Templates from McDonald's et al. (2005):
-            # Unigram T1-T6
-            # Bigram T7-T13
-            # -1/+1 tokens T14-T17
-            # In between tokens T52
+        '''
+        Returns a list of features for one arc
+
+        Templates from McDonald's et al. (2005):
+            Unigram T1-T6
+            Bigram T7-T13
+            -1/+1 tokens T14-T17
+            In-between tokens T52
         
-        # Other templates:
-            # T18-T51
-            # In between tokens T53
+        Other templates:
+            T18-T51
+            In between tokens T53
+        '''
         
         templates = {
 
@@ -218,7 +217,10 @@ class Features:
 
     def get_attributes(self, token_id:str, 
         form_list:list, lemma_list:list, pos_list:list) -> tuple:
-        # get attributes of token with id == token_id
+        
+        '''
+        Get attributes of token with id == token_id
+        '''
         
         token_idx = int(token_id)
 
@@ -232,6 +234,12 @@ class Features:
 
     def get_direction_distance_between(self, head_id:str, dep_id:str) -> tuple:
         
+        '''
+        Get the distance between a head and dependent, 
+            the direction of the arc 
+            and a list with the tokens in-between the head and dependent
+        '''
+
         head_id = int(head_id)
         dep_id = int(dep_id)
 
@@ -259,9 +267,11 @@ class Features:
     def get_neighbours_attributes(self, head_id:str, dep_id:str,
         form_list:list, lemma_list:list, pos_list:list) -> list:
 
-        # get attributes of tokens with ids:
-        # token_id+1, token_id-1, dep_id+1, dep_id-1
-        
+        '''
+        Get attributes of tokens to the left and to the right of 
+        the head and dependent (i.e., token_id+1, token_id-1, dep_id+1, dep_id-1)
+        '''
+
         head_idx = int(head_id)
         dep_idx = int(dep_id)
         
@@ -310,6 +320,12 @@ class Features:
 
     def get_sentence_attributes(self, sentence_ob:object) -> tuple:
         
+        '''
+        Get all attributes of the sentence as lists
+        e.g. 
+        pos_list has all the pos tags of tokens in the sentence in order
+        '''
+
         id_list = sentence_ob.id
         form_list = sentence_ob.form
         lemma_list = sentence_ob.lemma
@@ -321,17 +337,18 @@ class Features:
         #empty1_list = sentence_ob.empty1 #always empty?
         #empty2_list = sentence_ob.empty2 #always empty?
 
-        # 1	In	in	IN	_	_	43	ADV	_	_
-        # 2	an	an	DT	_	_	5	NMOD	_	_
 
         return id_list, form_list, lemma_list, pos_list, head_list
 
 
 
     def features_to_vector(self, feat_map, features_one_arc):
-        # features_one_arc is the output of get_features
 
-        #fv = [0 for i in range(len(feat_map))]
+        '''
+        Create a dense feature vector (for one arc)
+        from the list of features
+        '''
+
         fv_dense = []
 
         for feature in features_one_arc:
@@ -339,11 +356,8 @@ class Features:
                 feat_idx = feat_map[feature]
                 
                 fv_dense.append(feat_idx)
-                #fv[feat_idx] = 1
 
-        #assert len(fv) == len(feat_map)
 
-        #return fv
         return fv_dense
 
 

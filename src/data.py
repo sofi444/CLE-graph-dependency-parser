@@ -1,18 +1,5 @@
-import sys
+
 import os
-
-
-
-n_args = len(sys.argv)
-#file_name = sys.argv[1]
-#language = sys.argv[2]
-#mode = sys.argv[3]
-
-#file_name = "wsj_train.first-1k.conll06"
-file_name = "wsj_dev.conll06.blind"
-language = "english"
-#mode = "train"
-mode = "dev"
 
 
 
@@ -28,12 +15,12 @@ class Sentence:
         self.morph = ["_"]
         self.head = ["_"]
         self.rel = ["_"]
-        self.empty1 = ["_"] #?
-        self.empty2 = ["_"] #?
+        self.empty1 = ["_"] # always empty
+        self.empty2 = ["_"] # always empty
 
         '''Fill Sentence object'''
         for token in sentence_raw:
-            tags = token.split("\t") #tags:list
+            tags = token.split("\t") # tags:list
             self.id.append(tags[0])
             self.form.append(tags[1])
             self.lemma.append(tags[2])
@@ -48,14 +35,23 @@ class Sentence:
 
 
 class Read:
-    def __init__(self, file_name:str, language:str, mode:str) -> None:
+    def __init__(self, file_name:str, language:str, mode:str, eval_bool=False) -> None:
         
         '''Set Path'''
         self.file_name = file_name
-        self.file_path = os.path.join(
-            f"data/{language}/{mode}/",
-            self.file_name
-        )
+        self.eval = eval_bool
+        
+        if self.eval:
+            self.file_path = os.path.join(
+                f"preds/{self.file_name}"
+            )
+        
+        else:
+            self.file_path = os.path.join(
+                f"data/{language}/{mode}/",
+                self.file_name
+            )
+
 
         '''Parse file'''
         self.all_sentences = []
@@ -103,14 +99,11 @@ class Write:
         
 if __name__ == "__main__":
 
+    #file_name = "wsj_train.first-1k.conll06"
+    file_name = "wsj_dev.conll06.blind"
+    language = "english"
+    #mode = "train"
+    mode = "dev"
+
     reader = Read(file_name, language, mode)
     #Write("sanity_check.conll06", reader.all_sentences)
-
-    ''' 
-    Check sentence length:
-    
-    for sent in reader.all_sentences:
-        #if len(sent.id) == 5:
-        if 7 <= len(sent.id) <= 9:
-            print(reader.all_sentences.index(sent), len(sent.id))
-    '''

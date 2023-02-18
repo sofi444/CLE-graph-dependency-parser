@@ -14,8 +14,8 @@ from datetime import datetime
 
 from data import Read, Write, Sentence
 from features import Features
-from graph_v2 import Graph
-from cle_v2 import Decoder
+from graphs import Graph
+from cle import Decoder
 from model import StructuredPerceptron
 
 
@@ -61,7 +61,6 @@ def main(args):
             for sentence in train_data:
 
                 sent_num += 1 # First instance is sentence 1
-                #print(sent_num) #tmp
 
                 # init graphs
                 gold_graph = Graph(sentence=sentence,
@@ -114,6 +113,8 @@ def main(args):
 
     if args.mode == "dev" or args.mode == "test":
 
+        _start = time.time()
+
         # set data to use
         test_reader = Read(file_name=args.test_filename,
                             language=args.language,
@@ -124,40 +125,103 @@ def main(args):
         else:
             test_data = test_reader.all_sentences[:args.test_slice]
 
+
         # load model and feature map
         weight_vector, feature_map = load_model_fm(filename=args.model_filename,
                                                     models_dir=args.models_dir)
         
+        # set filename for preds
+        time_now = datetime.now().strftime("%d%m%H%M") #01021800
+        out_filename = f"{args.language}_{args.mode}_{time_now}.conll06.pred"
+        out_file = os.path.join(args.preds_dir, out_filename)
 
-        uas_total = 0
-        num_sentences = len(test_data)
+        tot_sentences = len(test_data)
+
+        print(f"\nTotal sentences: {tot_sentences}",
+            f"\nPredictions will be saved here: {out_file}\n")
+
+
+        _start_pred = time.time()
+
+        processed_sents = 0
 
         for sentence in test_data:
 
             # init graph
-            fully_connected_graph = Graph(sentence=sentence,
-                                    feature_map=feature_map,
-                                    weight_vector=weight_vector,
-                                    graph_type="fully_connected").graph
+            global G
+            G = Graph(sentence=sentence,
+                        feature_map=feature_map,
+                        weight_vector=weight_vector,
+                        graph_type="fully_connected")
+
+            fc_graph = G.graph
             
             # call model
             model = StructuredPerceptron(weight_vector=weight_vector, 
                                 gold_graph=None, 
-                                fully_connected_graph=fully_connected_graph,
+                                fully_connected_graph=fc_graph,
                                 feature_map=feature_map,
                                 mode=args.mode,
                                 lr=args.lr)
 
             # make prediction 
-            pred_grap, uas_sent, correct_arcs, total_arcs = model.test()
+            pred_graph = model.test()
 
-            uas_total += uas_sent
+            # write to file
+            if pred_graph == {}:
+                print("!! Prediction is empty")
+
+            else:
+                write_pred(sentence_ob=sentence, 
+                            pred_graph=pred_graph, 
+                            out_file=out_file)
+                processed_sents += 1
+                
+            # print some info
+            if processed_sents % args.print_every == 0:
+                print(f"Sentences processed: {processed_sents}/{tot_sentences}")
         
-        
-        uas_general = uas_total / num_sentences
-        print(f"Done. UAS: {round(uas_general, 3)}")
-        
-        # write preds to file
+
+        _end_pred = time.time()
+        _time_elapsed = time.strftime("%H:%M:%S", time.gmtime(_end_pred-_start_pred))
+
+        print(f"\nDone. Time elapsed: {_time_elapsed}"
+              f"\nSentences processed: {processed_sents}/{tot_sentences}")
+
+
+
+def write_pred(sentence_ob:object, pred_graph:dict, out_file:str):
+
+    _rev = G.reverse_graph(graph=pred_graph)
+
+    # order by int value of keys (correct order when printing)
+    rev_pred_graph = collections.OrderedDict(
+        {k: v for k, v in sorted(_rev.items(), key=lambda x: int(x[0]))}
+    )
+
+
+    with open(out_file, "a+") as f:
+
+        for dep in rev_pred_graph.keys():
+
+            head = list(rev_pred_graph[dep].keys())[0] # only one head
+
+            dep_idx = int(dep)
+
+            f.write(
+                dep + "\t" +
+                sentence_ob.form[dep_idx] + "\t" +
+                sentence_ob.lemma[dep_idx] + "\t" +
+                sentence_ob.pos[dep_idx] + "\t" +
+                "_" + "\t" + # xpos
+                "_" + "\t" + # morph
+                head + "\t" +
+                "_" + "\t" + # rel
+                "_" + "\t" + # empty1
+                "_" + "\n" # empty2
+            )
+
+        f.write("\n")
 
 
 
@@ -251,7 +315,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_filename",
         type=str,
-        default="",
+        default="eng-3ep-03_Tue14022023_1717",
         help="name of file to load weight vector and feature map from",
     )
 
@@ -266,7 +330,7 @@ if __name__ == "__main__":
         "--train_filename",
         type=str,
         default="wsj_train.first-1k.conll06",
-        help="filename of training data to be used (1k vs. 5k)",
+        help="filename of training data to be used (1k vs. 5k vs. full)",
     )
 
     parser.add_argument(
@@ -303,6 +367,14 @@ if __name__ == "__main__":
         default="models/",
         help="directory where models are saved to/loaded from",
     )
+
+    parser.add_argument(
+        "--preds_dir",
+        type=str,
+        default="preds/",
+        help="directory where predictions are saved",
+    )
+
 
     args = parser.parse_args()
     main(args)

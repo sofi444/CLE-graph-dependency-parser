@@ -1,23 +1,25 @@
 
-import sys
+import argparse
+import pprint
 
 from data import Read
 
 
 
-#n_args = len(sys.argv)
-#pred_file = sys.argv[1]
-#gold_file = sys.argv[2]
-#language = sys.argv[3]
-#mode = sys.argv[4]
-
-
-
 class Evaluate:
-    def __init__(self, pred_file, gold_file, language, mode) -> None:
+    def __init__(self, args) -> None:
 
-        self.pred = Read(pred_file, language, mode)
-        self.gold = Read(gold_file, language, mode)
+        # print all args
+        pprint.pprint(vars(args))    
+
+        self.pred = Read(file_name=args.pred_file,
+                         language=args.language,
+                         mode=args.mode,
+                         eval_bool=True)
+
+        self.gold = Read(file_name=args.gold_file,
+                         language=args.language,
+                         mode=args.mode)
 
         assert len(self.pred.all_sentences) == len(self.gold.all_sentences), "Length mismatch"
 
@@ -61,12 +63,38 @@ class Evaluate:
 
 if __name__ == "__main__":
 
-    pred_file = "wsj_dev.conll06.pred"
-    gold_file = "wsj_dev.conll06.gold"
-    language = "english"
-    mode = "dev"
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="dev",
+        help="evaluate on dev set vs. test set",
+    )
+
+    parser.add_argument(
+        "--language",
+        type=str,
+        default="english",
+        help="language of data (english vs. german)",
+    )
+
+    parser.add_argument(
+        "--pred_file",
+        type=str,
+        help="file with predictions (filename only)",
+    )
+
+    parser.add_argument(
+        "--gold_file",
+        type=str,
+        default="wsj_dev.conll06.gold",
+        help="file with gold labels",
+    )
 
 
-    evaluation = Evaluate(pred_file, gold_file, language, mode)
-    print("UAS:", evaluation.UAS())
-    print("LAS:", evaluation.LAS())
+    args = parser.parse_args()
+    evaluation = Evaluate(args)
+
+    print("\nUAS:", evaluation.UAS())
+    #print("LAS:", evaluation.LAS())

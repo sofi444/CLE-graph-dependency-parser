@@ -6,7 +6,7 @@ import random
 import networkx as nx
 
 from data import Read
-from graph_v2 import Graph
+from graphs import Graph
 from features import Features
 
 

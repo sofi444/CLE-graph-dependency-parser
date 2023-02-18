@@ -1,13 +1,11 @@
-# structured perceptron
 
-import pprint
 import collections
 import random
 
 from data import Read
 from features import Features
-from graph_v2 import Graph
-from cle_v2 import Decoder
+from graphs import Graph
+from cle import Decoder
 
 
 
@@ -30,32 +28,19 @@ class StructuredPerceptron:
         self.mode = mode
         self.lr = lr
 
-        #if self.w is None:
-        #    self.w = [1 for i in range(len(self.feature_map))] # tmp
-
 
 
     def train(self):
         
         # predict
         pred_graph = D.CLE(graph=self.fc_graph)
-        #pred_graph = D.nx_CLE(graph=self.fc_graph)
-
-        #if not D.is_spanning_tree(test_graph=pred_graph, og_graph=self.fc_graph):
-        #    print('NOT a spanning tree')
     
 
         uas_sent, correct_arcs, total_arcs = self.calculate_UAS_sent(
             pred_graph=pred_graph, gold_graph=self.gold_graph
         )
 
-        #tmp
-        #pprint.pprint(pred_graph, sort_dicts=True, compact=True)
-        #pprint.pprint(self.gold_graph, sort_dicts=True, compact=True)
-        #print(f"+++ UAS: {uas_sent} +++")
-
         if uas_sent == 1.0: # all arcs are correct -> return
-            #print(f"uas_sent: 100%") # complete match
 
             return self.w, uas_sent, correct_arcs, total_arcs
 
@@ -65,7 +50,6 @@ class StructuredPerceptron:
             # sum up features
             fsum_gold = self.get_features_sum(self.gold_graph)
             fsum_pred = self.get_features_sum(pred_graph)
-
             
             # update weight vector
             combined_features = {**fsum_pred, **fsum_gold}.keys()
@@ -82,6 +66,7 @@ class StructuredPerceptron:
                 if f in fsum_pred and f not in fsum_gold:
                     self.w[f_idx] += self.lr * (0 - fsum_pred[f])
             
+
             return self.w, uas_sent, correct_arcs, total_arcs
 
 
@@ -90,23 +75,22 @@ class StructuredPerceptron:
 
         # predict
         pred_graph = D.CLE(graph=self.fc_graph)
-        #pred_graph = D.nx_CLE(graph=self.fc_graph)
 
-        #if not D.is_spanning_tree(test_graph=pred_graph, og_graph=self.fc_graph):
-        #    print('NOT a spanning tree')
-        #    pred_graph = {}
-
-
-        uas_sent, correct_arcs, total_arcs = self.calculate_UAS_sent(
-            pred_graph=pred_graph, gold_graph=self.gold_graph
-        )
-
+        if not D.is_spanning_tree(test_graph=pred_graph, og_graph=self.fc_graph):
+            
+            print('NOT a spanning tree')
+            pred_graph = {}
         
-        return pred_graph, uas_sent, correct_arcs, total_arcs
+        
+        return pred_graph
 
 
 
     def calculate_UAS_sent(self, pred_graph, gold_graph):
+
+        '''
+        Returns sentence-level unlabeled attachment score
+        '''
 
         correct_arcs = total_arcs = 0
 
@@ -132,6 +116,13 @@ class StructuredPerceptron:
             
 
     def get_features_sum(self, graph):
+
+        '''
+        Returns a dict where
+            keys are features
+            values are counts of how many times 
+            that features was present in the graph
+        '''
 
         features_sum = collections.defaultdict(lambda: 0)
 
