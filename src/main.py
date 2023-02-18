@@ -12,10 +12,9 @@ import argparse
 import time
 from datetime import datetime
 
-from data import Read, Write, Sentence
+from data import Read
 from features import Features
 from graphs import Graph
-from cle import Decoder
 from model import StructuredPerceptron
 
 
@@ -132,8 +131,11 @@ def main(args):
         
         # set filename for preds
         time_now = datetime.now().strftime("%d%m%H%M") #01021800
-        out_filename = f"{args.language}_{args.mode}_{time_now}.conll06.pred"
-        out_file = os.path.join(args.preds_dir, out_filename)
+
+        out_file = os.path.join(args.preds_dir, 
+            f"{args.language}-{args.mode}-{args.n_epochs}-{args.lr}-{args.init_type}",
+            f"_{time_now}.conll06.pred"
+        )
 
         tot_sentences = len(test_data)
 
@@ -252,10 +254,17 @@ def load_model_fm(filename:str, models_dir:str) -> list:
 
 
 
-def save_model_fm(model:list, fm:dict, models_dir:str):
+def save_model_fm(model:list, fm:dict, models_dir:str, args):
     
-    time_now = datetime.now().strftime("%a%d%m%Y_%H%M") #Wed01022023_1800
-    out_file = os.path.join(models_dir, time_now)
+    time_now = datetime.now().strftime("%d%m%H%M") #01021800
+    
+    out_file = os.path.join(
+        models_dir, 
+        f"{args.language}-{args.n_epochs}-{args.lr}-{args.init_type}_", 
+        time_now
+    )
+
+    print(f"Model filename:" {out_file})
 
     f = gzip.open(out_file, "wb")
     dump_obj = (model, fm)
