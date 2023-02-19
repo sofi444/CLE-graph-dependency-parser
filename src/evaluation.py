@@ -9,55 +9,94 @@ from data import Read
 class Evaluate:
     def __init__(self, args) -> None:
 
-        # print all args
-        pprint.pprint(vars(args))    
+        '''
+        File-level evaluation (pred file)
+        '''
 
-        self.pred = Read(file_name=args.pred_file,
+        # print all args
+        pprint.pprint(vars(args))
+
+        self.pred = Read(in_file=args.pred_file,
                          language=args.language,
                          mode=args.mode,
-                         eval_bool=True)
+                         is_pred=True)
 
-        self.gold = Read(file_name=args.gold_file,
+        self.gold = Read(in_file=args.gold_file,
                          language=args.language,
                          mode=args.mode)
 
         assert len(self.pred.all_sentences) == len(self.gold.all_sentences), "Length mismatch"
 
 
+
     def UAS(self):
-        self.correct_heads = 0
-        self.total_tokens = 0
+
+        correct_heads = 0
+        total_tokens = 0
 
         for sent_idx in range(len(self.pred.all_sentences)):
             pred_heads = self.pred.all_sentences[sent_idx].head #list
             gold_heads = self.gold.all_sentences[sent_idx].head #list
 
             for token_idx in range(1, len(pred_heads)): # Skip ROOT
-                self.total_tokens += 1
+                total_tokens += 1
                 if pred_heads[token_idx] == gold_heads[token_idx]:
-                    self.correct_heads += 1
+                    correct_heads += 1
         
-        return self.correct_heads / self.total_tokens
+        return correct_heads / total_tokens
+
 
 
     def LAS(self):
-        self.correct_heads_and_labels = 0
-        self.total_tokens = 0
+
+        correct_heads_and_labels = 0
+        total_tokens = 0
 
         for sent_idx in range(len(self.pred.all_sentences)):
+
             pred_heads = self.pred.all_sentences[sent_idx].head #list
             gold_heads = self.gold.all_sentences[sent_idx].head #list
+
             pred_rels = self.pred.all_sentences[sent_idx].rel #list
             gold_rels = self.gold.all_sentences[sent_idx].rel #list
 
             for token_idx in range(1, len(pred_heads)): # Skip ROOT
-                self.total_tokens += 1
+
+                total_tokens += 1
+
                 if pred_heads[token_idx] == gold_heads[token_idx]:
                     if pred_rels[token_idx] == gold_rels[token_idx]:
-                        self.correct_heads_and_labels += 1
-        
-        return self.correct_heads_and_labels / self.total_tokens
 
+                        correct_heads_and_labels += 1
+        
+        return correct_heads_and_labels / total_tokens
+
+
+
+    def UCM(self):
+        
+        complete_matches = 0
+        total_sentences = len(self.pred.all_sentences)
+
+        for sent_idx in range(total_sentences):
+
+            pred_heads = self.pred.all_sentences[sent_idx].head #list
+            gold_heads = self.gold.all_sentences[sent_idx].head #list
+
+            correct_heads = 0
+            total_heads = 0
+
+            for token_idx in range(1, len(pred_heads)): # Skip ROOT
+                total_heads += 1
+                if pred_heads[token_idx] == gold_heads[token_idx]:
+                    correct_heads += 1
+            
+            if correct_heads == total_heads:
+                complete_matches += 1
+            
+        
+        return complete_matches / total_sentences
+    
 
 
 
@@ -92,9 +131,26 @@ if __name__ == "__main__":
         help="file with gold labels",
     )
 
+    parser.add_argument(
+        "--metrics",
+        type=str,
+        default="uas,ucm",
+        help="UAS, LAS, UCM",
+    )
+
 
     args = parser.parse_args()
+
     evaluation = Evaluate(args)
 
-    print("\nUAS:", evaluation.UAS())
-    #print("LAS:", evaluation.LAS())
+    
+    for metric in args.metrics.split(","):
+        
+        if metric == "uas":
+            print(f"\nUAS: {round(evaluation.UAS(), 3)}\n")
+
+        if metric == "las":
+            print(f"LAS: {round(evaluation.LAS(), 3)}\n")
+        
+        if metric == "ucm":
+            print(f"UCM: {round(evaluation.UCM(), 3)}\n")
