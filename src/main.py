@@ -29,7 +29,7 @@ def main(args):
         _start_tr = time.time()
 
         # set data to use
-        train_reader = Read(file_name=args.train_filename,
+        train_reader = Read(in_file=args.train_file,
                             language=args.language,
                             mode=args.mode) 
 
@@ -48,7 +48,13 @@ def main(args):
         print(f"\nSize of feature map & w: {len(feature_map)}")
 
 
+        previous_w = None
+        latest_uas = float()
+        lr = args.lr
+
         for epoch in range(1, args.n_epochs+1):
+
+            previous_w = weight_vector
 
             _start_ep = time.time()
 
@@ -72,17 +78,17 @@ def main(args):
                                         weight_vector=weight_vector,
                                         graph_type="fully_connected").graph
 
-                
+
                 # call model
                 model = StructuredPerceptron(weight_vector=weight_vector, 
                                     gold_graph=gold_graph, 
                                     fully_connected_graph=fully_connected_graph,
                                     feature_map=feature_map,
                                     mode=args.mode,
-                                    lr=args.lr)
+                                    lr=lr)
 
                 # training iteration
-                weight_vector, uas_sent, correct_arcs, total_arcs = model.train()
+                weight_vector, uas_sent = model.train()
                 
                 all_uas.append(uas_sent)
                 
@@ -98,24 +104,46 @@ def main(args):
             epoch_time = time.strftime("%H:%M:%S", time.gmtime(time.time()-_start_ep))
             print(f"Epoch {epoch} time: {epoch_time}")
 
+            epoch_uas = sum(all_uas)/len(all_uas)
+
+            # early stop
+            if args.early_stop:
+                if latest_uas >= epoch_uas:
+
+                    # use w from previous epoch
+                    weight_vector = previous_w
+
+                    print(f"\nEarly stop at epoch {epoch-1}.",
+                        f"Discarding epoch {epoch} updates...")
+                    
+                    break
+
+            latest_uas = epoch_uas
+
+            # learning rate decay
+            if args.lr_decay:
+                # start decreasing lr by half after the second epoch
+                if epoch >= 2:
+                    lr = lr/2
+
 
         if args.save_model:
             # save model + feature map
             save_model_fm(model=weight_vector, 
                             fm=feature_map, 
-                            models_dir=args.models_dir)
+                            models_dir=args.models_dir,
+                            args=args)
 
         training_time = time.strftime("%H:%M:%S", time.gmtime(time.time()-_start_tr))
-        print(f"\nTotal training time: {training_time}")
+        print(f"\nTotal training time: {training_time}",
+              f"\nTraining UAS: {round(latest_uas, 3)}\n")
 
     
 
     if args.mode == "dev" or args.mode == "test":
 
-        _start = time.time()
-
         # set data to use
-        test_reader = Read(file_name=args.test_filename,
+        test_reader = Read(in_file=args.test_file,
                             language=args.language,
                             mode=args.mode)
 
@@ -126,26 +154,24 @@ def main(args):
 
 
         # load model and feature map
-        weight_vector, feature_map = load_model_fm(filename=args.model_filename,
-                                                    models_dir=args.models_dir)
+        weight_vector, feature_map = load_model_fm(model_file=args.model_file,
+                                                   args=args)
         
         # set filename for preds
-        time_now = datetime.now().strftime("%d%m%H%M") #01021800
-
+        model_filename = args.model_file.split("/")[-1]
         out_file = os.path.join(args.preds_dir, 
-            f"{args.language}-{args.mode}-{args.n_epochs}-{args.lr}-{args.init_type}",
-            f"_{time_now}.conll06.pred"
-        )
+            f"{args.mode}_{model_filename}.conll06.pred")
 
         tot_sentences = len(test_data)
+        print(f"\nTotal sentences: {tot_sentences}")
 
-        print(f"\nTotal sentences: {tot_sentences}",
-            f"\nPredictions will be saved here: {out_file}\n")
+        if args.save_preds:
+            print(f"\nPredictions will be saved here: {out_file}\n")
 
 
         _start_pred = time.time()
-
         processed_sents = 0
+        complete_matches = 0
 
         for sentence in test_data:
 
@@ -164,20 +190,18 @@ def main(args):
                                 fully_connected_graph=fc_graph,
                                 feature_map=feature_map,
                                 mode=args.mode,
-                                lr=args.lr)
+                                lr=None)
 
             # make prediction 
             pred_graph = model.test()
 
             # write to file
-            if pred_graph == {}:
-                print("!! Prediction is empty")
-
-            else:
-                write_pred(sentence_ob=sentence, 
+            if args.save_preds:
+                write_preds(sentence_ob=sentence, 
                             pred_graph=pred_graph, 
                             out_file=out_file)
-                processed_sents += 1
+            
+            processed_sents += 1
                 
             # print some info
             if processed_sents % args.print_every == 0:
@@ -188,14 +212,15 @@ def main(args):
         _time_elapsed = time.strftime("%H:%M:%S", time.gmtime(_end_pred-_start_pred))
 
         print(f"\nDone. Time elapsed: {_time_elapsed}"
-              f"\nSentences processed: {processed_sents}/{tot_sentences}")
+              f"\nSentences processed: {processed_sents}/{tot_sentences}\n")
 
 
 
-def write_pred(sentence_ob:object, pred_graph:dict, out_file:str):
+def write_preds(sentence_ob:object, pred_graph:dict, out_file:str):
 
     _rev = G.reverse_graph(graph=pred_graph)
 
+    # *nodes in the graphs are strings e.g. '2'
     # order by int value of keys (correct order when printing)
     rev_pred_graph = collections.OrderedDict(
         {k: v for k, v in sorted(_rev.items(), key=lambda x: int(x[0]))}
@@ -241,10 +266,14 @@ def init_w(n_dims:int, init_type:str) -> list:
 
 
 
-def load_model_fm(filename:str, models_dir:str) -> list:
+def load_model_fm(model_file:str, args) -> list:
     
-    in_file = os.path.join(models_dir, filename)
-    f = gzip.open(in_file, "rb")
+    if os.path.exists(model_file): # path already given
+        in_path = model_file
+    else: # set path
+        in_path = os.path.join(args.models_dir, model_file)
+    
+    f = gzip.open(in_path, "rb")
 
     model, fm = pickle.load(f)
     
@@ -257,14 +286,18 @@ def load_model_fm(filename:str, models_dir:str) -> list:
 def save_model_fm(model:list, fm:dict, models_dir:str, args):
     
     time_now = datetime.now().strftime("%d%m%H%M") #01021800
+
+    bool_args = ""
+    if args.lr_decay:
+        bool_args += "lrdecay"
     
     out_file = os.path.join(
         models_dir, 
-        f"{args.language}-{args.n_epochs}-{args.lr}-{args.init_type}_", 
-        time_now
+        f"{args.language}-{args.n_epochs}-{args.lr}-{args.init_type}-{bool_args}"
+        + f"_{time_now}.pkl"
     )
 
-    print(f"Model filename:" {out_file})
+    print(f"Model file: {out_file}")
 
     f = gzip.open(out_file, "wb")
     dump_obj = (model, fm)
@@ -281,6 +314,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
+        "--language",
+        type=str,
+        default="english",
+        help="english data vs. german data",
+    )
+
+    parser.add_argument(
         "--mode",
         type=str,
         default="train",
@@ -295,10 +335,9 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--init_type",
-        type=str,
-        default="zeros",
-        help="init type for the weight vector (zeros vs. random)",
+        "--early_stop",
+        action='store_true',
+        help="include --early_stop to stop if training UAS worsens, omit otherwise",
     )
 
     parser.add_argument(
@@ -306,6 +345,19 @@ if __name__ == "__main__":
         type=float,
         default=0.3,
         help="learning rate",
+    )
+
+    parser.add_argument(
+        "--lr_decay",
+        action='store_true',
+        help="include --lr_decay to half lr after the 2nd epoch, omit otherwise",
+    )
+
+    parser.add_argument(
+        "--init_type",
+        type=str,
+        default="zeros",
+        help="init type for the weight vector (zeros vs. random)",
     )
 
     parser.add_argument(
@@ -322,24 +374,24 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--model_filename",
+        "--model_file",
         type=str,
-        default="eng-3ep-03_Tue14022023_1717",
-        help="name of file to load weight vector and feature map from",
+        default=None,
+        help="file to load weight vector and feature map from",
     )
 
     parser.add_argument(
-        "--language",
+        "--models_dir",
         type=str,
-        default="english",
-        help="english data vs. german data",
+        default="models/",
+        help="directory where models are saved to/loaded from",
     )
 
     parser.add_argument(
-        "--train_filename",
+        "--train_file",
         type=str,
         default="wsj_train.first-1k.conll06",
-        help="filename of training data to be used (1k vs. 5k vs. full)",
+        help="training data to be used (1k vs. 5k vs. full)",
     )
 
     parser.add_argument(
@@ -350,10 +402,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--test_filename",
+        "--test_file",
         type=str,
         default="wsj_dev.conll06.blind",
-        help="filename of test/dev data to be used (1k vs. 5k)",
+        help="test/dev data to be used (1k vs. 5k)",
     )
 
     parser.add_argument(
@@ -371,17 +423,16 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--models_dir",
-        type=str,
-        default="models/",
-        help="directory where models are saved to/loaded from",
-    )
-
-    parser.add_argument(
         "--preds_dir",
         type=str,
         default="preds/",
         help="directory where predictions are saved",
+    )
+
+    parser.add_argument(
+        "--save_preds",
+        action='store_true',
+        help="include --save_preds to save preds to file, omit otherwise",
     )
 
 
