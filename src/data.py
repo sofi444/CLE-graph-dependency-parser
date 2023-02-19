@@ -35,22 +35,23 @@ class Sentence:
 
 
 class Read:
-    def __init__(self, file_name:str, language:str, mode:str, eval_bool=False) -> None:
+    def __init__(self, in_file:str, language:str, mode:str, is_pred=False) -> None:
         
         '''Set Path'''
-        self.file_name = file_name
-        self.eval = eval_bool
+        if os.path.exists(in_file): # path already given
+            self.file_path = in_file
         
-        if self.eval:
-            self.file_path = os.path.join(
-                f"preds/{self.file_name}"
-            )
-        
-        else:
-            self.file_path = os.path.join(
-                f"data/{language}/{mode}/",
-                self.file_name
-            )
+        else: # set path
+            if is_pred: # if input is a pred file
+                self.file_path = os.path.join(
+                    f"preds/{in_file}"
+                )
+            
+            else: # input is a data file
+                self.file_path = os.path.join(
+                    f"data/{language}/{mode}/",
+                    in_file
+                )
 
 
         '''Parse file'''
@@ -71,9 +72,9 @@ class Read:
 
 
 class Write:
-    def __init__(self, outfile_name:str, out_content:list) -> None:
-        self.outfile_name = outfile_name
-        self.out_path = os.path.join(f"data/", self.outfile_name)
+    def __init__(self, out_file:str, out_content:list) -> None:
+
+        self.out_path = os.path.join(f"data/", out_file)
         self.out_content = out_content
         
         with open(self.out_path, "w") as f:
@@ -99,11 +100,8 @@ class Write:
         
 if __name__ == "__main__":
 
-    #file_name = "wsj_train.first-1k.conll06"
-    file_name = "wsj_dev.conll06.blind"
-    language = "english"
-    #mode = "train"
-    mode = "dev"
-
-    reader = Read(file_name, language, mode)
+    reader = Read(in_file="wsj_train.first-1k.conll06", 
+                  language="english", 
+                  mode="train")
+    
     #Write("sanity_check.conll06", reader.all_sentences)
