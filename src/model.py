@@ -36,13 +36,14 @@ class StructuredPerceptron:
         pred_graph = D.CLE(graph=self.fc_graph)
     
 
-        uas_sent, correct_arcs, total_arcs = self.calculate_UAS_sent(
-            pred_graph=pred_graph, gold_graph=self.gold_graph
+        uas_sent, _, _ = self.calculate_UAS_sent(
+            pred_graph=pred_graph, 
+            gold_graph=self.gold_graph
         )
 
         if uas_sent == 1.0: # all arcs are correct -> return
 
-            return self.w, uas_sent, correct_arcs, total_arcs
+            return self.w, uas_sent
 
 
         else: # need to update weight vector
@@ -67,7 +68,7 @@ class StructuredPerceptron:
                     self.w[f_idx] += self.lr * (0 - fsum_pred[f])
             
 
-            return self.w, uas_sent, correct_arcs, total_arcs
+            return self.w, uas_sent
 
 
 
@@ -140,11 +141,11 @@ class StructuredPerceptron:
 
 if __name__ == "__main__":
     
-    test_reader = Read(file_name="wsj_dev.conll06.blind",
+    test_reader = Read(in_file="wsj_dev.conll06.blind",
                         language="english",
                         mode="dev")
     
-    train_reader = Read(file_name="wsj_train.first-1k.conll06",
+    train_reader = Read(in_file="wsj_train.first-1k.conll06",
                         language="english",
                         mode="train")
 

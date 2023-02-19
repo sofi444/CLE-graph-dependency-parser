@@ -266,11 +266,11 @@ class Graph:
 
 if __name__ == "__main__":
 
-    test_reader = Read(file_name="wsj_dev.conll06.blind",
+    test_reader = Read(in_file="wsj_dev.conll06.blind",
                         language="english",
                         mode="dev")
     
-    train_reader = Read(file_name="wsj_train.first-1k.conll06",
+    train_reader = Read(in_file="wsj_train.first-1k.conll06",
                         language="english",
                         mode="train") 
 
