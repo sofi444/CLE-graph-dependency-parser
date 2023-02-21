@@ -135,7 +135,7 @@ class Decoder:
                     '''Arcs entering Vc'''
 
                     # bp: breaking point
-                    max_bp_score = -100.00
+                    max_bp_score = -1000.00
 
                     # Iterate through in-cycle nodes
                     for cycle_node in cycle:
