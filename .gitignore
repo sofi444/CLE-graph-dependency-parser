@@ -16,6 +16,7 @@ share/
 src/__pycache__
 .gitignore
 
+Icon?
 
 # Logs
 logs
