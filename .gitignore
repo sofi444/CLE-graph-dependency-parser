@@ -18,6 +18,7 @@ src/__pycache__
 .gitignore
 
 Icon?
+Casadei*
 
 # Logs
 logs
