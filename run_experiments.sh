@@ -10,8 +10,8 @@ python3 src/main.py \
 --model_file "models/english-3-0.3-zeros_14021717.pkl" \
 --models_dir "models/" \
 --test_file "data/english/dev/wsj_dev.conll06.blind" \
---test_slice 100 \
---print_every 50 \
+--test_slice 0 \
+--print_every 200 \
 --preds_dir "preds/" \
 `#--save_preds` \
 

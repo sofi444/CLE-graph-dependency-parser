@@ -289,11 +289,11 @@ def save_model_fm(model:list, fm:dict, models_dir:str, args):
 
     bool_args = ""
     if args.lr_decay:
-        bool_args += "lrdecay"
+        bool_args += "-lrdecay"
     
     out_file = os.path.join(
         models_dir, 
-        f"{args.language}-{args.n_epochs}-{args.lr}-{args.init_type}-{bool_args}"
+        f"{args.language}-{args.n_epochs}-{args.lr}-{args.init_type}{bool_args}"
         + f"_{time_now}.pkl"
     )
 
