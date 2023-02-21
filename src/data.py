@@ -100,8 +100,27 @@ class Write:
         
 if __name__ == "__main__":
 
-    reader = Read(in_file="wsj_train.first-1k.conll06", 
-                  language="english", 
-                  mode="train")
+    #reader = Read(in_file="wsj_train.first-1k.conll06", 
+    #              language="english", 
+    #              mode="train")
     
     #Write("sanity_check.conll06", reader.all_sentences)
+
+    reader = Read(in_file="data/german/train/tiger-2.2.train.conll06", 
+                  language="german", 
+                  mode="train")
+    
+    data = reader.all_sentences
+
+    tot_sents = 0
+    len_sents = 0
+
+    for sent in data:
+        tot_sents += 1
+        len_sents += len(sent.id)
+    
+    avg_sent_len = len_sents / tot_sents
+    print(avg_sent_len)
+
+    # eng: 25.3
+    # de: 18.8
