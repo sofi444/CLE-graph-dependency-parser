@@ -1,8 +1,7 @@
-# Statistical Dependency Parsing 2022/23
 
 ## Graph-based Dependency Parser
 
-The data is in Conll06 format and it is not shareable.
+The data is in Conll06 format.
 
 The parser components are:
 + Structured Perceptron
